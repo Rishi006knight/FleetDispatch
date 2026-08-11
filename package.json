@@ -1,0 +1,16 @@
+{
+  "name": "ai-fleet-delivery-management",
+  "version": "1.0.0",
+  "description": "AI-Powered Intelligent Fleet & Delivery Management Platform",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:ml": "cd ml-service && .venv\\Scripts\\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ml\""
+  },
+  "dependencies": {
+    "axios": "^1.19.0",
+    "concurrently": "^8.2.2"
+  }
+}

@@ -8,7 +8,6 @@ from app.services.route_optimizer import RouteOptimizer
 from app.services.eta_predictor import ETAPredictor
 from app.services.churn_predictor import ChurnPredictor
 from app.services.anomaly_detector import AnomalyDetector
-from app.services.pod_verifier import PODVerifier
 from app.services.simulator import OperationsSimulator
 
 app = FastAPI(title="AI Fleet & Logistics Intelligence API", version="1.0.0")
@@ -58,13 +57,6 @@ class DeviationRequest(BaseModel):
   current_lat: float
   current_lng: float
   route: List[Dict[str, float]]
-
-class PODRequest(BaseModel):
-  photo_base64: str
-  driver_lat: float
-  driver_lng: float
-  drop_lat: float
-  drop_lng: float
 
 class SimulationRequest(BaseModel):
   current_drivers: int
@@ -191,20 +183,6 @@ def predict_churn(req: ChurnRequest):
 def detect_deviation(req: DeviationRequest):
   try:
     result = AnomalyDetector.detect_deviation(req.current_lat, req.current_lng, req.route)
-    return result
-  except Exception as e:
-    raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/verify-pod")
-def verify_pod(req: PODRequest):
-  try:
-    result = PODVerifier.verify_pod(
-      req.photo_base64,
-      req.driver_lat,
-      req.driver_lng,
-      req.drop_lat,
-      req.drop_lng
-    )
     return result
   except Exception as e:
     raise HTTPException(status_code=500, detail=str(e))

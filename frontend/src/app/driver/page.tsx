@@ -215,40 +215,23 @@ export default function DriverPortal() {
     }, 2000);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPodPhoto(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleVerifyPOD = async () => {
-    if (!activeOrder || !podPhoto) return;
+  const handleCompleteDelivery = async () => {
+    if (!activeOrder) return;
     setPodStatus('loading');
     setErrorMessage('');
 
     try {
-      const res = await axios.post(`${API_URL}/api/orders/${activeOrder.orderId}/verify-pod`, {
-        photoBase64: podPhoto,
-        driverLocation: driver?.currentLocation
+      const res = await axios.put(`${API_URL}/api/orders/${activeOrder.orderId}/status`, {
+        status: 'completed'
       });
 
-      if (res.data.success) {
-        setPodStatus('success');
-        setActiveOrder(res.data.order);
-        if (driveTimerRef.current) clearInterval(driveTimerRef.current);
-        setIsDriving(false);
-      } else {
-        setPodStatus('failed');
-        setErrorMessage(res.data.message);
-      }
+      setPodStatus('success');
+      setActiveOrder(res.data);
+      if (driveTimerRef.current) clearInterval(driveTimerRef.current);
+      setIsDriving(false);
     } catch (err: any) {
       setPodStatus('failed');
-      setErrorMessage(err.response?.data?.error || 'Verification server error.');
+      setErrorMessage(err.response?.data?.error || 'Failed to complete shipment.');
     }
   };
 
@@ -429,42 +412,45 @@ export default function DriverPortal() {
               )}
             </div>
 
-            {/* Photo Proof of Delivery Section */}
+            {/* Delivery Completion & Handover Section */}
             {activeOrder.status !== 'completed' && (
-              <div className="p-5 bg-zinc-950 rounded-2xl border border-zinc-800 space-y-4">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-cyan-400" /> Upload Cargo POD & Gate Receipt
-                </h3>
-
-                <div className="flex items-center gap-4">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="text-xs text-zinc-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-cyan-400 hover:file:bg-zinc-700"
-                  />
-                  {podPhoto && (
-                    <button
-                      onClick={handleVerifyPOD}
-                      disabled={podStatus === 'loading'}
-                      className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold rounded-xl text-xs transition-all"
-                    >
-                      {podStatus === 'loading' ? 'Running AI Computer Vision Check...' : 'Verify Cargo POD'}
-                    </button>
-                  )}
+              <div className="p-5 bg-zinc-950 rounded-2xl border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Destination Gate Handover
+                  </h3>
+                  <span className="text-xs text-zinc-400">
+                    Confirm container unloading at destination terminal and credit freight earnings.
+                  </span>
                 </div>
 
-                {podStatus === 'success' && (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-xl flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" /> Proof of delivery verified. Earnings added to wallet!
-                  </div>
-                )}
+                <button
+                  onClick={handleCompleteDelivery}
+                  disabled={podStatus === 'loading'}
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-zinc-950 font-black rounded-xl text-xs transition-all shadow-lg flex items-center gap-2 whitespace-nowrap"
+                >
+                  {podStatus === 'loading' ? (
+                    'Completing Handover...'
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 text-zinc-950" /> Confirm Handover & Complete Delivery
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
-                {podStatus === 'failed' && (
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" /> {errorMessage}
-                  </div>
-                )}
+            {podStatus === 'success' && (
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-2xl flex items-center gap-2.5 font-semibold">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                <span>Delivery confirmed! Freight payment has been successfully credited to your driver wallet.</span>
+              </div>
+            )}
+
+            {podStatus === 'failed' && (
+              <div className="p-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-2xl flex items-center gap-2.5">
+                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+                <span>{errorMessage}</span>
               </div>
             )}
 

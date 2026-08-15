@@ -78,52 +78,52 @@ export default function CustomerPortal() {
 
     newSocket.on('ORDER_CREATED', (order: any) => {
       if (!order.businessCode || order.businessCode === bCode) {
-        setOrders(prev => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
+        setOrders((prev: any[]) => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
       }
     });
 
     newSocket.on('BILL_QUOTED', (order: any) => {
       if (!order.businessCode || order.businessCode === bCode) {
-        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+        setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
         setShowBillModal(true);
       }
     });
 
     newSocket.on('BILL_ACCEPTED', (order: any) => {
       if (!order.businessCode || order.businessCode === bCode) {
-        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+        setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       }
     });
 
     newSocket.on('BILL_REJECTED', (order: any) => {
       if (!order.businessCode || order.businessCode === bCode) {
-        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+        setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       }
     });
 
     newSocket.on('ORDER_ASSIGNED', ({ order }: any) => {
       if (!order.businessCode || order.businessCode === bCode) {
-        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+        setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       }
     });
 
     newSocket.on('ORDER_STATUS_UPDATED', (order: any) => {
       if (!order.businessCode || order.businessCode === bCode) {
-        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+        setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       }
     });
 
     newSocket.on('DRIVER_UPDATED', (driver: any) => {
-      setDrivers(prev => prev.map(d => d.driverId === driver.driverId ? driver : d));
+      setDrivers((prev: any[]) => prev.map(d => d.driverId === driver.driverId ? driver : d));
     });
 
     newSocket.on('TELEMETRY_UPDATED', (data: any) => {
-      setDrivers(prev => prev.map(d => {
+      setDrivers((prev: any[]) => prev.map(d => {
         if (d.driverId === data.driverId) {
           return { ...d, currentLocation: data.location };
         }

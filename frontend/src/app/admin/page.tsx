@@ -66,62 +66,62 @@ export default function AdminDashboard() {
       newSocket.emit('join_room', 'admin');
     });
 
-    newSocket.on('ORDER_CREATED', (order) => {
-      setOrders(prev => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
+    newSocket.on('ORDER_CREATED', (order: any) => {
+      setOrders((prev: any[]) => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
       fetchAnalytics();
     });
 
-    newSocket.on('QUOTE_REQUESTED', (order) => {
-      setOrders(prev => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
+    newSocket.on('QUOTE_REQUESTED', (order: any) => {
+      setOrders((prev: any[]) => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
       setSelectedOrder(order);
     });
 
-    newSocket.on('BILL_QUOTED', (order) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    newSocket.on('BILL_QUOTED', (order: any) => {
+      setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       fetchAnalytics();
     });
 
-    newSocket.on('BILL_ACCEPTED', (order) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    newSocket.on('BILL_ACCEPTED', (order: any) => {
+      setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       fetchAnalytics();
     });
 
-    newSocket.on('BILL_REJECTED', (order) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    newSocket.on('BILL_REJECTED', (order: any) => {
+      setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
     });
 
-    newSocket.on('ORDER_DISPATCH_REQUEST', ({ order, driver }) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    newSocket.on('ORDER_DISPATCH_REQUEST', ({ order, driver }: any) => {
+      setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
     });
 
-    newSocket.on('DISPATCH_REQUEST_DECLINED', ({ order, driver }) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    newSocket.on('DISPATCH_REQUEST_DECLINED', ({ order, driver }: any) => {
+      setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
     });
 
-    newSocket.on('ORDER_ASSIGNED', ({ order, driver }) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setDrivers(prev => prev.map(d => d.driverId === driver.driverId ? driver : d));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    newSocket.on('ORDER_ASSIGNED', ({ order, driver }: any) => {
+      setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+      setDrivers((prev: any[]) => prev.map(d => d.driverId === driver.driverId ? driver : d));
+      setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       fetchAnalytics();
     });
 
-    newSocket.on('ORDER_STATUS_UPDATED', (order) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    newSocket.on('ORDER_STATUS_UPDATED', (order: any) => {
+      setOrders((prev: any[]) => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder((prev: any) => prev && prev.orderId === order.orderId ? order : prev);
       fetchAnalytics();
     });
 
-    newSocket.on('DRIVER_UPDATED', (driver) => {
-      setDrivers(prev => prev.map(d => d.driverId === driver.driverId ? driver : d));
+    newSocket.on('DRIVER_UPDATED', (driver: any) => {
+      setDrivers((prev: any[]) => prev.map(d => d.driverId === driver.driverId ? driver : d));
     });
 
-    newSocket.on('TELEMETRY_UPDATED', (data) => {
-      setDrivers(prev => prev.map(d => {
+    newSocket.on('TELEMETRY_UPDATED', (data: any) => {
+      setDrivers((prev: any[]) => prev.map(d => {
         if (d.driverId === data.driverId) {
           return { ...d, currentLocation: data.location };
         }

@@ -33,4 +33,13 @@ frontend/out/
 
 # Temporary files
 *.log
-console.log(err.message))
+
+# Java Maven Build
+backend-java/target/
+target/
+*.class
+
+# Python Bytecode
+__pycache__/
+*.py[cod]
+*$py.class

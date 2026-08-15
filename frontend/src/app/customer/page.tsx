@@ -521,8 +521,8 @@ export default function CustomerPortal() {
 
       {/* Itemized Quotation Bill Modal */}
       {showBillModal && selectedOrder && selectedOrder.billingDetails && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto my-auto relative z-[100000]">
             
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div>

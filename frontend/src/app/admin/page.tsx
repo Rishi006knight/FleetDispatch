@@ -46,12 +46,6 @@ export default function AdminDashboard() {
   const [editNotes, setEditNotes] = useState<string>('');
   const [presentingBill, setPresentingBill] = useState(false);
 
-  // Simulation states
-  const [simDemand, setSimDemand] = useState(30);
-  const [simDrivers, setSimDrivers] = useState(5);
-  const [simResult, setSimResult] = useState<any | null>(null);
-  const [simulating, setSimulating] = useState(false);
-
   // Active Tab Filter for Orders: All, Quotes, Ready for Dispatch, In Transit, Completed
   const [orderFilter, setOrderFilter] = useState<'all' | 'quotes' | 'confirmed' | 'active' | 'completed'>('all');
 
@@ -241,21 +235,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleRunSimulation = async () => {
-    setSimulating(true);
-    try {
-      const res = await axios.post(`${API_URL}/api/analytics/simulate`, {
-        demandIncreasePercent: simDemand,
-        additionalDrivers: simDrivers,
-        zoneAlert: 'Tamil Nadu Logistics Grid'
-      });
-      setSimResult(res.data);
-    } catch (err) {
-      alert('Simulation error.');
-    } finally {
-      setSimulating(false);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -608,56 +587,34 @@ export default function AdminDashboard() {
             />
           </div>
 
-          {/* Bottom Grid: What-If Simulator & Incidents */}
+          {/* Bottom Grid: Tamil Nadu 16 Terminals Fleet Status & Live Incidents */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* What-If Operations Simulator */}
+            {/* Tamil Nadu 16 Terminals Fleet Capacity */}
             <div className="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-5 space-y-3">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-indigo-400" /> Tamil Nadu Fleet What-If Simulator
-              </h3>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <label className="text-zinc-500 text-[10px] font-bold uppercase block mb-1">Surge Demand (+%)</label>
-                  <input
-                    type="number"
-                    value={simDemand}
-                    onChange={(e) => setSimDemand(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-zinc-500 text-[10px] font-bold uppercase block mb-1">Additional Trucks</label>
-                  <input
-                    type="number"
-                    value={simDrivers}
-                    onChange={(e) => setSimDrivers(parseInt(e.target.value) || 0)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white"
-                  />
-                </div>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Warehouse className="w-4 h-4 text-cyan-400" /> Terminal & Port CFS Fleet Capacity
+                </h3>
+                <span className="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+                  16 Hubs Online
+                </span>
               </div>
 
-              <button
-                onClick={handleRunSimulation}
-                disabled={simulating}
-                className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-all"
-              >
-                {simulating ? 'Simulating Capacity...' : 'Simulate Logistics Surge'}
-              </button>
-
-              {simResult && (
-                <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-zinc-400">Required Heavy Trucks:</span>
-                    <span className="font-bold text-white">{simResult.required_vehicles}</span>
+              <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                {TAMIL_NADU_WAREHOUSES.map((wh) => (
+                  <div key={wh.id} className="p-2 bg-zinc-950/80 border border-zinc-800/80 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-white block">{wh.name}</span>
+                      <span className="text-[10px] text-zinc-500">{wh.type} • {wh.storageTypes.join(', ')}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] font-bold text-cyan-400 block">{wh.activeFleet} Trucks</span>
+                      <span className="text-[9px] text-zinc-500">{wh.capacityTonnes} MT Cap</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-zinc-400">Projected SLA Compliance:</span>
-                    <span className="font-bold text-emerald-400">{simResult.expected_sla_percent}%</span>
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
 
             {/* Live Incidents & Route Deviations */}
@@ -671,7 +628,7 @@ export default function AdminDashboard() {
 
               <div className="space-y-2 max-h-[160px] overflow-y-auto">
                 {incidents.length === 0 ? (
-                  <div className="text-xs text-zinc-600 text-center py-6">All Tamil Nadu freight routes operating normally.</div>
+                  <div className="text-xs text-zinc-600 text-center py-8">All Tamil Nadu freight corridors operating normally.</div>
                 ) : (
                   incidents.map((inc, idx) => (
                     <div key={idx} className="p-2.5 bg-zinc-950 border border-rose-500/30 rounded-xl text-xs space-y-1">

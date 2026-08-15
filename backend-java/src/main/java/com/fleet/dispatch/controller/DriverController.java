@@ -44,61 +44,181 @@ public class DriverController {
 
     @PostConstruct
     public void seedInitialTamilNaduTruckFleet() {
-        if (driverRepository.count() == 0) {
-            // Station hubs with RTO codes, names, coordinates, vehicle types, and initial truck count
-            Object[][] stationData = new Object[][]{
-                { "01", "Chennai Port Container Terminal & CFS", 13.0844, 80.2936, "32ft Heavy Trailer", 4 },
-                { "02", "Ennore Port (Kamarajar Bulk & CFS)", 13.2611, 80.3314, "40ft Container Freightliner", 3 },
-                { "04", "Chennai - Koyambedu Freight Terminal", 13.0692, 80.1948, "20ft Multi-Axle Truck", 3 },
-                { "22", "Chennai - Tambaram South Gateway", 12.9249, 80.1000, "14ft Eicher Container", 2 },
-                { "38", "Coimbatore Industrial Logistics Park", 11.0168, 76.9558, "Refrigerated Reefer Truck", 4 },
-                { "58", "Madurai Ring Road Logistics Terminal", 9.9252, 78.1198, "20ft Multi-Axle Truck", 3 },
-                { "45", "Trichy Central Transit Corridor", 10.7905, 78.7047, "32ft Heavy Trailer", 3 },
-                { "27", "Salem Steel Logistics Center", 11.6643, 78.1460, "14ft Eicher Container", 2 },
-                { "72", "Tirunelveli SIPCOT Terminal", 8.7139, 77.7567, "20ft Multi-Axle Truck", 2 },
-                { "23", "Vellore Industrial Logistics Park", 12.9165, 79.1325, "32ft Heavy Trailer", 2 },
-                { "39", "Tiruppur Apparel Export Hub", 11.1085, 77.3411, "20ft Multi-Axle Truck", 3 },
-                { "33", "Erode SIPCOT Logistics Complex", 11.3410, 77.7172, "Refrigerated Reefer Truck", 2 },
-                { "69", "Thoothukudi V.O.C Port Terminal", 8.7642, 78.1348, "40ft Container Freightliner", 3 },
-                { "49", "Thanjavur Delta Terminal", 10.7870, 79.1378, "14ft Eicher Container", 2 },
-                { "70", "Hosur Auto & Electronics Freight Hub", 12.7409, 77.8253, "32ft Heavy Trailer", 3 },
-                { "74", "Nagercoil Gateway Depot", 8.1833, 77.4119, "20ft Multi-Axle Truck", 2 },
-            };
+        // Clear and re-seed to ensure all drivers have full Name(address-username) format
+        driverRepository.deleteAll();
 
-            for (Object[] station : stationData) {
-                String rto = (String) station[0];
-                String hubName = (String) station[1];
-                double lat = (Double) station[2];
-                double lng = (Double) station[3];
-                String vType = (String) station[4];
-                int count = (Integer) station[5];
-
-                for (int i = 1; i <= count; i++) {
-                    int driverNum = 1000 + i; // 1001, 1002, 1003...
-                    String driverId = "TRK-" + rto + "-" + driverNum;
-                    String vehicleId = "TN-" + rto + "-TR-" + driverNum;
-                    String driverName = "Driver #" + driverNum + " (" + hubName.split(" ")[0] + " - TN-" + rto + "-" + driverNum + ")";
-
-                    Driver d = new Driver();
-                    d.setDriverId(driverId);
-                    d.setName(driverName);
-                    d.setPhone("9840" + rto + driverNum);
-                    d.setVehicleId(vehicleId);
-                    d.setVehicleType(vType);
-                    d.setStatus("online");
-                    // Slight coordinate jitter so trucks don't sit on identical pixel
-                    double jitterLat = (Math.random() - 0.5) * 0.006;
-                    double jitterLng = (Math.random() - 0.5) * 0.006;
-                    d.setCurrentLocation(new Location(lat + jitterLat, lng + jitterLng, hubName));
-                    d.setRating(Math.round((4.85 + Math.random() * 0.14) * 100.0) / 100.0);
-                    d.setReliability(Math.round((0.95 + Math.random() * 0.04) * 100.0) / 100.0);
-                    d.setEarnings(Math.round((32000.0 + Math.random() * 25000.0) * 100.0) / 100.0);
-                    d.setCompletedDeliveries((int)(40 + Math.random() * 35));
-                    d.setCancellationRate(0.02);
-                    d.setChurnRisk(0.05);
-
-                    driverRepository.save(d);
+        // Matrix of 16 Stations: RTO, Station Address, Lat, Lng, Driver Roster: [Driver Name, Assigned Truck Type]
+        Object[][] stations = new Object[][]{
+            {
+                "01", "Rajaji Salai, Chennai Port", 13.0844, 80.2936,
+                new String[][]{
+                    {"Murugan", "32ft Heavy Trailer"},
+                    {"Kaliyaperumal", "40ft Container Freightliner"},
+                    {"Soundararajan", "20ft Multi-Axle Truck"},
+                    {"Thangaraj", "32ft Heavy Trailer"}
                 }
+            },
+            {
+                "02", "Kamarajar Port Road, Ennore", 13.2611, 80.3314,
+                new String[][]{
+                    {"Shanmugam", "40ft Container Freightliner"},
+                    {"Sundaram", "32ft Heavy Trailer"},
+                    {"Kathirvel", "40ft Container Freightliner"}
+                }
+            },
+            {
+                "04", "Wholesale Market Road, Koyambedu", 13.0692, 80.1948,
+                new String[][]{
+                    {"Ganesan", "20ft Multi-Axle Truck"},
+                    {"Venkatesan", "Refrigerated Reefer Truck"},
+                    {"Alagappan", "14ft Eicher Container"}
+                }
+            },
+            {
+                "22", "GST Road, Tambaram, Chennai", 12.9249, 80.1000,
+                new String[][]{
+                    {"Mani", "14ft Eicher Container"},
+                    {"Dharmalingam", "20ft Multi-Axle Truck"},
+                    {"Boopathi", "32ft Heavy Trailer"}
+                }
+            },
+            {
+                "38", "Peelamedu Avinashi Road, Coimbatore", 11.0168, 76.9558,
+                new String[][]{
+                    {"Senthil Kumar", "Refrigerated Reefer Truck"},
+                    {"Ranganathan", "20ft Multi-Axle Truck"},
+                    {"Muthukumar", "32ft Heavy Trailer"},
+                    {"Karuppusamy", "Refrigerated Reefer Truck"}
+                }
+            },
+            {
+                "58", "Kappalur Ring Road, Madurai", 9.9252, 78.1198,
+                new String[][]{
+                    {"Arumugam", "20ft Multi-Axle Truck"},
+                    {"Pandian", "32ft Heavy Trailer"},
+                    {"Jeyachandran", "Refrigerated Reefer Truck"}
+                }
+            },
+            {
+                "45", "Central Corridor, Tiruchirappalli", 10.7905, 78.7047,
+                new String[][]{
+                    {"Ramasamy", "32ft Heavy Trailer"},
+                    {"Balakrishnan", "20ft Multi-Axle Truck"},
+                    {"Anbazhagan", "40ft Container Freightliner"}
+                }
+            },
+            {
+                "27", "Steel Plant Road, Salem", 11.6643, 78.1460,
+                new String[][]{
+                    {"Karthik Raja", "14ft Eicher Container"},
+                    {"Selvaraj", "20ft Multi-Axle Truck"},
+                    {"Gunasekaran", "32ft Heavy Trailer"}
+                }
+            },
+            {
+                "72", "Gangaikondan SIPCOT, Tirunelveli", 8.7139, 77.7567,
+                new String[][]{
+                    {"Muthu", "20ft Multi-Axle Truck"},
+                    {"Ayyappan", "32ft Heavy Trailer"},
+                    {"Balamurugan", "14ft Eicher Container"}
+                }
+            },
+            {
+                "23", "Ranipet SIPCOT, Vellore", 12.9165, 79.1325,
+                new String[][]{
+                    {"Perumal", "32ft Heavy Trailer"},
+                    {"Saravanan", "20ft Multi-Axle Truck"},
+                    {"Rajendran", "14ft Eicher Container"}
+                }
+            },
+            {
+                "39", "Netaji Apparel Park, Tiruppur", 11.1085, 77.3411,
+                new String[][]{
+                    {"Sakthivel", "20ft Multi-Axle Truck"},
+                    {"Chinnasamy", "14ft Eicher Container"},
+                    {"Govindasamy", "32ft Heavy Trailer"}
+                }
+            },
+            {
+                "33", "Perundurai SIPCOT, Erode", 11.3410, 77.7172,
+                new String[][]{
+                    {"Palanisamy", "Refrigerated Reefer Truck"},
+                    {"Narayanan", "20ft Multi-Axle Truck"},
+                    {"Ravichandran", "14ft Eicher Container"}
+                }
+            },
+            {
+                "69", "Harbour Estate CFS, Thoothukudi", 8.7642, 78.1348,
+                new String[][]{
+                    {"Velu Pandian", "40ft Container Freightliner"},
+                    {"Subramanian", "32ft Heavy Trailer"},
+                    {"Chelladurai", "20ft Multi-Axle Truck"}
+                }
+            },
+            {
+                "49", "Pillaiyarpatti Delta Terminal, Thanjavur", 10.7870, 79.1378,
+                new String[][]{
+                    {"Manickam", "14ft Eicher Container"},
+                    {"Elangovan", "20ft Multi-Axle Truck"},
+                    {"Selvam", "Refrigerated Reefer Truck"}
+                }
+            },
+            {
+                "70", "SIPCOT Phase-II, Hosur", 12.7409, 77.8253,
+                new String[][]{
+                    {"Dhandapani", "32ft Heavy Trailer"},
+                    {"Thirunavukkarasu", "20ft Multi-Axle Truck"},
+                    {"Sivakumar", "32ft Heavy Trailer"}
+                }
+            },
+            {
+                "74", "Kanyakumari Highway, Nagercoil", 8.1833, 77.4119,
+                new String[][]{
+                    {"Vijayakumar", "20ft Multi-Axle Truck"},
+                    {"Ponraj", "14ft Eicher Container"},
+                    {"Kannan", "Refrigerated Reefer Truck"}
+                }
+            }
+        };
+
+        for (Object[] station : stations) {
+            String rto = (String) station[0];
+            String address = (String) station[1];
+            double lat = (Double) station[2];
+            double lng = (Double) station[3];
+            String[][] driverRoster = (String[][]) station[4];
+
+            for (int i = 0; i < driverRoster.length; i++) {
+                int driverNum = 1001 + i;
+                String personName = driverRoster[i][0];
+                String truckType = driverRoster[i][1];
+                String username = "TN-" + rto + "-" + driverNum;
+                String driverId = "TRK-" + rto + "-" + driverNum;
+                String vehicleId = "TN-" + rto + "-TR-" + driverNum;
+                
+                // Exact Format: Name(address-username)
+                String formattedDriverName = personName + " (" + address + " - " + username + ")";
+
+                Driver d = new Driver();
+                d.setDriverId(driverId);
+                d.setName(formattedDriverName);
+                d.setPhone("9840" + rto + driverNum);
+                d.setVehicleId(vehicleId);
+                d.setVehicleType(truckType);
+                d.setStatus("online");
+                
+                // Slight offset for visual map separation around hub
+                double jitterLat = (Math.random() - 0.5) * 0.005;
+                double jitterLng = (Math.random() - 0.5) * 0.005;
+                d.setCurrentLocation(new Location(lat + jitterLat, lng + jitterLng, address));
+                d.setRating(Math.round((4.85 + Math.random() * 0.14) * 100.0) / 100.0);
+                d.setReliability(Math.round((0.95 + Math.random() * 0.04) * 100.0) / 100.0);
+                d.setEarnings(Math.round((35000.0 + Math.random() * 25000.0) * 100.0) / 100.0);
+                d.setCompletedDeliveries((int)(42 + Math.random() * 35));
+                d.setCancellationRate(0.01);
+                d.setChurnRisk(0.04);
+
+                driverRepository.save(d);
             }
         }
     }

@@ -4,23 +4,191 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Truck, UserCircle2, ArrowRight, Lock, KeyRound, Warehouse, Info, Building2 } from 'lucide-react';
 
-const RTO_DISTRICT_MAP: Record<string, { district: string; hub: string; lat: number; lng: number; vehicleType: string }> = {
-  '01': { district: 'Chennai Central', hub: 'Chennai Port Container Terminal', lat: 13.0844, lng: 80.2936, vehicleType: '32ft Heavy Trailer' },
-  '02': { district: 'Chennai North', hub: 'Ennore Port (Kamarajar) Terminal', lat: 13.2611, lng: 80.3314, vehicleType: '40ft Container Freightliner' },
-  '04': { district: 'Chennai East', hub: 'Koyambedu Wholesale Terminal', lat: 13.0692, lng: 80.1948, vehicleType: '20ft Multi-Axle Truck' },
-  '22': { district: 'Meenambakkam', hub: 'Tambaram South Gateway Hub', lat: 12.9249, lng: 80.1000, vehicleType: '14ft Eicher Container' },
-  '38': { district: 'Coimbatore North', hub: 'Peelamedu Industrial Hub', lat: 11.0168, lng: 76.9558, vehicleType: 'Refrigerated Reefer Truck' },
-  '58': { district: 'Madurai South', hub: 'Kappalur Ring Road Hub', lat: 9.9252, lng: 78.1198, vehicleType: '20ft Multi-Axle Truck' },
-  '45': { district: 'Tiruchirappalli', hub: 'Trichy Central Transit Hub', lat: 10.7905, lng: 78.7047, vehicleType: '32ft Heavy Trailer' },
-  '27': { district: 'Salem', hub: 'Steel Plant Road Logistics Center', lat: 11.6643, lng: 78.1460, vehicleType: '14ft Eicher Container' },
-  '72': { district: 'Tirunelveli', hub: 'Gangaikondan SIPCOT Hub', lat: 8.7139, lng: 77.7567, vehicleType: '20ft Multi-Axle Truck' },
-  '23': { district: 'Vellore', hub: 'Ranipet-Vellore Industrial Park', lat: 12.9165, lng: 79.1325, vehicleType: '32ft Heavy Trailer' },
-  '39': { district: 'Tiruppur', hub: 'Netaji Apparel Park Hub', lat: 11.1085, lng: 77.3411, vehicleType: '20ft Multi-Axle Truck' },
-  '33': { district: 'Erode', hub: 'Perundurai SIPCOT Complex', lat: 11.3410, lng: 77.7172, vehicleType: 'Refrigerated Reefer Truck' },
-  '69': { district: 'Thoothukudi', hub: 'V.O.C Port CFS Terminal', lat: 8.7642, lng: 78.1348, vehicleType: '40ft Container Freightliner' },
-  '49': { district: 'Thanjavur', hub: 'Pillaiyarpatti Delta Terminal', lat: 10.7870, lng: 79.1378, vehicleType: '14ft Eicher Container' },
-  '70': { district: 'Hosur', hub: 'SIPCOT Auto & Electronics Hub', lat: 12.7409, lng: 77.8253, vehicleType: '32ft Heavy Trailer' },
-  '74': { district: 'Nagercoil', hub: 'Kanyakumari Gateway Depot', lat: 8.1833, lng: 77.4119, vehicleType: '20ft Multi-Axle Truck' },
+const STATION_DRIVER_ROSTER: Record<string, {
+  district: string;
+  address: string;
+  lat: number;
+  lng: number;
+  drivers: Array<{ name: string; truckType: string }>;
+}> = {
+  '01': {
+    district: 'Chennai Port',
+    address: 'Rajaji Salai, Chennai Port CFS',
+    lat: 13.0844,
+    lng: 80.2936,
+    drivers: [
+      { name: 'Murugan', truckType: '32ft Heavy Trailer' },
+      { name: 'Kaliyaperumal', truckType: '40ft Container Freightliner' },
+      { name: 'Soundararajan', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Thangaraj', truckType: '32ft Heavy Trailer' },
+    ]
+  },
+  '02': {
+    district: 'Ennore Port',
+    address: 'Kamarajar Port Road, Ennore',
+    lat: 13.2611,
+    lng: 80.3314,
+    drivers: [
+      { name: 'Shanmugam', truckType: '40ft Container Freightliner' },
+      { name: 'Sundaram', truckType: '32ft Heavy Trailer' },
+      { name: 'Kathirvel', truckType: '40ft Container Freightliner' },
+    ]
+  },
+  '04': {
+    district: 'Koyambedu',
+    address: 'Wholesale Market Road, Koyambedu',
+    lat: 13.0692,
+    lng: 80.1948,
+    drivers: [
+      { name: 'Ganesan', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Venkatesan', truckType: 'Refrigerated Reefer Truck' },
+      { name: 'Alagappan', truckType: '14ft Eicher Container' },
+    ]
+  },
+  '22': {
+    district: 'Tambaram',
+    address: 'GST Road, Tambaram, Chennai',
+    lat: 12.9249,
+    lng: 80.1000,
+    drivers: [
+      { name: 'Mani', truckType: '14ft Eicher Container' },
+      { name: 'Dharmalingam', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Boopathi', truckType: '32ft Heavy Trailer' },
+    ]
+  },
+  '38': {
+    district: 'Coimbatore',
+    address: 'Peelamedu Avinashi Road, Coimbatore',
+    lat: 11.0168,
+    lng: 76.9558,
+    drivers: [
+      { name: 'Senthil Kumar', truckType: 'Refrigerated Reefer Truck' },
+      { name: 'Ranganathan', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Muthukumar', truckType: '32ft Heavy Trailer' },
+      { name: 'Karuppusamy', truckType: 'Refrigerated Reefer Truck' },
+    ]
+  },
+  '58': {
+    district: 'Madurai',
+    address: 'Kappalur Ring Road, Madurai',
+    lat: 9.9252,
+    lng: 78.1198,
+    drivers: [
+      { name: 'Arumugam', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Pandian', truckType: '32ft Heavy Trailer' },
+      { name: 'Jeyachandran', truckType: 'Refrigerated Reefer Truck' },
+    ]
+  },
+  '45': {
+    district: 'Trichy',
+    address: 'Central Corridor, Tiruchirappalli',
+    lat: 10.7905,
+    lng: 78.7047,
+    drivers: [
+      { name: 'Ramasamy', truckType: '32ft Heavy Trailer' },
+      { name: 'Balakrishnan', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Anbazhagan', truckType: '40ft Container Freightliner' },
+    ]
+  },
+  '27': {
+    district: 'Salem',
+    address: 'Steel Plant Road, Salem',
+    lat: 11.6643,
+    lng: 78.1460,
+    drivers: [
+      { name: 'Karthik Raja', truckType: '14ft Eicher Container' },
+      { name: 'Selvaraj', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Gunasekaran', truckType: '32ft Heavy Trailer' },
+    ]
+  },
+  '72': {
+    district: 'Tirunelveli',
+    address: 'Gangaikondan SIPCOT, Tirunelveli',
+    lat: 8.7139,
+    lng: 77.7567,
+    drivers: [
+      { name: 'Muthu', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Ayyappan', truckType: '32ft Heavy Trailer' },
+      { name: 'Balamurugan', truckType: '14ft Eicher Container' },
+    ]
+  },
+  '23': {
+    district: 'Vellore',
+    address: 'Ranipet SIPCOT, Vellore',
+    lat: 12.9165,
+    lng: 79.1325,
+    drivers: [
+      { name: 'Perumal', truckType: '32ft Heavy Trailer' },
+      { name: 'Saravanan', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Rajendran', truckType: '14ft Eicher Container' },
+    ]
+  },
+  '39': {
+    district: 'Tiruppur',
+    address: 'Netaji Apparel Park, Tiruppur',
+    lat: 11.1085,
+    lng: 77.3411,
+    drivers: [
+      { name: 'Sakthivel', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Chinnasamy', truckType: '14ft Eicher Container' },
+      { name: 'Govindasamy', truckType: '32ft Heavy Trailer' },
+    ]
+  },
+  '33': {
+    district: 'Erode',
+    address: 'Perundurai SIPCOT, Erode',
+    lat: 11.3410,
+    lng: 77.7172,
+    drivers: [
+      { name: 'Palanisamy', truckType: 'Refrigerated Reefer Truck' },
+      { name: 'Narayanan', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Ravichandran', truckType: '14ft Eicher Container' },
+    ]
+  },
+  '69': {
+    district: 'Thoothukudi',
+    address: 'Harbour Estate CFS, Thoothukudi',
+    lat: 8.7642,
+    lng: 78.1348,
+    drivers: [
+      { name: 'Velu Pandian', truckType: '40ft Container Freightliner' },
+      { name: 'Subramanian', truckType: '32ft Heavy Trailer' },
+      { name: 'Chelladurai', truckType: '20ft Multi-Axle Truck' },
+    ]
+  },
+  '49': {
+    district: 'Thanjavur',
+    address: 'Pillaiyarpatti Delta Terminal, Thanjavur',
+    lat: 10.7870,
+    lng: 79.1378,
+    drivers: [
+      { name: 'Manickam', truckType: '14ft Eicher Container' },
+      { name: 'Elangovan', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Selvam', truckType: 'Refrigerated Reefer Truck' },
+    ]
+  },
+  '70': {
+    district: 'Hosur',
+    address: 'SIPCOT Phase-II, Hosur',
+    lat: 12.7409,
+    lng: 77.8253,
+    drivers: [
+      { name: 'Dhandapani', truckType: '32ft Heavy Trailer' },
+      { name: 'Thirunavukkarasu', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Sivakumar', truckType: '32ft Heavy Trailer' },
+    ]
+  },
+  '74': {
+    district: 'Nagercoil',
+    address: 'Kanyakumari Highway, Nagercoil',
+    lat: 8.1833,
+    lng: 77.4119,
+    drivers: [
+      { name: 'Vijayakumar', truckType: '20ft Multi-Axle Truck' },
+      { name: 'Ponraj', truckType: '14ft Eicher Container' },
+      { name: 'Kannan', truckType: 'Refrigerated Reefer Truck' },
+    ]
+  },
 };
 
 const SAMPLE_B2B_BUSINESSES = [
@@ -48,7 +216,7 @@ export default function LoginPage() {
     if (role === 'admin') {
       if (cleanUser.toUpperCase() === 'ADMIN' && cleanPass === 'admin123') {
         localStorage.setItem('user_role', 'admin');
-        localStorage.setItem('user_name', 'Tamil Nadu System Dispatcher');
+        localStorage.setItem('user_name', 'Quantum Express System Dispatcher');
         router.push('/admin');
       } else {
         setError('Invalid dispatcher credentials. Hint: admin / admin123');
@@ -67,17 +235,22 @@ export default function LoginPage() {
       const expectedPassword = `drivertn${rtoCode}`.toLowerCase();
 
       if (cleanPass === expectedPassword || cleanPass === 'driver123') {
-        const info = RTO_DISTRICT_MAP[rtoCode] || {
-          district: `District ${rtoCode}`,
-          hub: 'State Regional Logistics Center',
-          lat: 13.0692,
-          lng: 80.1948,
-          vehicleType: '20ft Multi-Axle Truck'
-        };
+        const station = STATION_DRIVER_ROSTER[rtoCode];
+        const unitNum = parseInt(driverUnit);
+        const unitIdx = !isNaN(unitNum) ? unitNum - 1001 : 0;
 
+        const driverMeta = (station && station.drivers && station.drivers[unitIdx])
+          ? station.drivers[unitIdx]
+          : { name: `Driver #${driverUnit}`, truckType: '20ft Multi-Axle Truck' };
+
+        const stationAddress = station ? station.address : 'State Logistics Center';
+        const stationLat = station ? station.lat : 13.0692;
+        const stationLng = station ? station.lng : 80.1948;
+
+        // Exact Format: Name(address-username)
+        const driverName = `${driverMeta.name} (${stationAddress} - ${cleanUpperUser})`;
         const vehicleId = `TN-${rtoCode}-TR-${driverUnit}`;
         const driverId = `TRK-${rtoCode}-${driverUnit}`;
-        const driverName = `Driver #${driverUnit} (${info.district} - ${cleanUpperUser})`;
 
         localStorage.setItem('user_role', 'driver');
         localStorage.setItem('driver_id', driverId);
@@ -85,10 +258,10 @@ export default function LoginPage() {
         localStorage.setItem('user_name', driverName);
         localStorage.setItem('vehicle_id', vehicleId);
         localStorage.setItem('rto_code', rtoCode);
-        localStorage.setItem('driver_hub', info.hub);
-        localStorage.setItem('driver_lat', String(info.lat));
-        localStorage.setItem('driver_lng', String(info.lng));
-        localStorage.setItem('vehicle_type', info.vehicleType);
+        localStorage.setItem('driver_hub', stationAddress);
+        localStorage.setItem('driver_lat', String(stationLat));
+        localStorage.setItem('driver_lng', String(stationLng));
+        localStorage.setItem('vehicle_type', driverMeta.truckType);
 
         router.push('/driver');
       } else {

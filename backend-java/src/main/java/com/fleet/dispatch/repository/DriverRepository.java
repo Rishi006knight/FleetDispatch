@@ -43,4 +43,8 @@ public class DriverRepository {
     public long count() {
         return storage.size();
     }
+
+    public void deleteAll() {
+        storage.clear();
+    }
 }

@@ -1,0 +1,26 @@
+services:
+  # 1. Java Spring Boot Enterprise Backend
+  - type: web
+    name: quantum-express-backend
+    env: docker
+    dockerfilePath: ./backend-java/Dockerfile
+    dockerContext: ./backend-java
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: ML_SERVICE_URL
+        value: https://quantum-express-ml.onrender.com
+
+  # 2. Python FastAPI Machine Learning Service
+  - type: web
+    name: quantum-express-ml
+    env: docker
+    dockerfilePath: ./ml-service/Dockerfile
+    dockerContext: ./ml-service
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 8000

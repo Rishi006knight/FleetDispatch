@@ -211,7 +211,7 @@ public class OrderController {
     }
 
     // Dispatcher sends request to respective driver of source origin hub
-    @PostMapping("/{orderId}/send-dispatch-request")
+    @PostMapping(value = {"/{orderId}/send-dispatch-request", "/{orderId}/request-dispatch"})
     public ResponseEntity<?> sendDispatchRequestToDriver(@PathVariable String orderId, @RequestBody Map<String, String> body) {
         String driverId = body.get("driverId");
 
@@ -244,7 +244,7 @@ public class OrderController {
     }
 
     // Driver responds to dispatch request (Accepts or Declines)
-    @PostMapping("/{orderId}/driver-response")
+    @PostMapping(value = {"/{orderId}/driver-response", "/{orderId}/dispatch-response"})
     public ResponseEntity<?> driverResponseToDispatch(@PathVariable String orderId, @RequestBody Map<String, String> body) {
         String driverId = body.get("driverId");
         String decision = body.get("decision"); // "accept" or "decline"

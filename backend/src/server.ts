@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { setupRoutes } from './routes/api.js';
+import { seedDatabase } from './seed.js';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 // Setup __dirname equivalent for ES Modules
@@ -46,6 +47,23 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} joined room: ${roomName}`);
   });
 
+  socket.on('update_telemetry', async (data) => {
+    try {
+      const { driverId, location, speed, heading, activeOrderId } = data;
+      if (driverId && location) {
+        io.emit('TELEMETRY_UPDATED', {
+          driverId,
+          location,
+          speed: speed || 55,
+          heading: heading || 0,
+          activeOrderId
+        });
+      }
+    } catch (err) {
+      console.error('Error handling socket update_telemetry:', err);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log(`Socket client disconnected: ${socket.id}`);
   });
@@ -73,6 +91,7 @@ async function connectDatabase() {
     // Set a short server selection timeout so we fail fast and fall back quickly
     await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 4000 });
     console.log('✓ Successfully connected to MongoDB Atlas database!');
+    await seedDatabase();
   } catch (err) {
     console.error('✗ MongoDB Atlas connection failed! Falling back to local In-Memory MongoDB server...');
     console.error(err);
@@ -81,6 +100,7 @@ async function connectDatabase() {
       const localUri = mongoServer.getUri();
       await mongoose.connect(localUri);
       console.log('✓ Connected to local In-Memory MongoDB Server successfully!');
+      await seedDatabase();
     } catch (localErr) {
       console.error('✗ Critical: Failed to launch local In-Memory MongoDB fallback!', localErr);
     }

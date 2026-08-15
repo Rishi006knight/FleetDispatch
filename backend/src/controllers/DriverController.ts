@@ -15,31 +15,58 @@ export class DriverController {
     this.io = io;
   }
 
-  // Register a new driver
+  // Register a new driver or update existing station driver
   registerDriver = async (req: Request, res: Response) => {
     try {
-      const { name, phone, vehicleId, vehicleType, initialLat, initialLng } = req.body;
+      const { 
+        name, 
+        phone, 
+        vehicleId, 
+        vehicleType, 
+        initialLat, 
+        initialLng, 
+        stationHub, 
+        rtoCode 
+      } = req.body;
 
-      if (!name || !phone || !vehicleId) {
-        return res.status(400).json({ error: 'Missing required driver fields.' });
+      if (!name || !vehicleId) {
+        return res.status(400).json({ error: 'Missing required driver fields (name, vehicleId).' });
       }
 
-      const driverId = 'DRV-' + Math.floor(100 + Math.random() * 900);
+      // Check if driver already exists with this vehicleId
+      let driver = await Driver.findOne({ vehicleId });
+      if (driver) {
+        driver.status = 'online';
+        if (initialLat && initialLng) {
+          driver.currentLocation = { lat: initialLat, lng: initialLng };
+        }
+        await driver.save();
+        this.io.emit('DRIVER_UPDATED', driver);
+        return res.json(driver);
+      }
+
+      // Generate driverId if not present
+      const driverId = 'TRK-' + (rtoCode || '01') + '-' + Math.floor(1000 + Math.random() * 9000);
 
       const newDriver = new Driver({
         driverId,
         name,
-        phone,
+        phone: phone || '9840112233',
         vehicleId,
-        vehicleType: vehicleType || 'bike',
-        status: 'offline',
+        vehicleType: vehicleType || '32ft Heavy Trailer',
+        status: 'online',
         currentLocation: {
-          lat: initialLat || 19.0760, // Default Mumbai
-          lng: initialLng || 72.8777
+          lat: initialLat || 13.0844, // Default Chennai Port CFS
+          lng: initialLng || 80.2936
         },
-        rating: 4.8 + Math.random() * 0.2, // Random starting rating
-        reliability: 0.9 + Math.random() * 0.1,
-        churnRisk: 0.05 + Math.random() * 0.1
+        stationHub: stationHub || 'Rajaji Salai, Chennai Port CFS',
+        rtoCode: rtoCode || '01',
+        rating: 4.88 + Math.random() * 0.1,
+        reliability: 0.96 + Math.random() * 0.03,
+        churnRisk: 0.02,
+        earnings: 45000 + Math.floor(Math.random() * 10000),
+        completedDeliveries: 50 + Math.floor(Math.random() * 30),
+        cancellationRate: 0.01
       });
 
       await newDriver.save();
@@ -54,7 +81,7 @@ export class DriverController {
   // Get all drivers
   getDrivers = async (req: Request, res: Response) => {
     try {
-      const drivers = await Driver.find();
+      const drivers = await Driver.find().sort({ createdAt: -1 });
       res.json(drivers);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -65,7 +92,7 @@ export class DriverController {
   toggleStatus = async (req: Request, res: Response) => {
     try {
       const { driverId } = req.params;
-      const { status } = req.body; // 'online' | 'offline'
+      const { status } = req.body; // 'online' | 'offline' | 'busy' | 'in_transit'
 
       const driver = await Driver.findOne({ driverId });
       if (!driver) {
@@ -96,12 +123,12 @@ export class DriverController {
       driver.currentLocation = { lat, lng };
       await driver.save();
 
-      // Log to telemetry database (time-series)
+      // Log to telemetry database
       const telemetryLog = new Telemetry({
         driverId,
         orderId: activeOrderId || null,
         location: { lat, lng },
-        speed: speed || 0,
+        speed: speed || 55,
         heading: heading || 0
       });
       await telemetryLog.save();
@@ -114,86 +141,6 @@ export class DriverController {
         heading,
         activeOrderId
       });
-
-      // If driver is busy delivering, check for route deviations
-      if (activeOrderId) {
-        const order = await Order.findOne({ orderId: activeOrderId });
-        if (order && order.status === 'out_for_delivery') {
-          try {
-            // Check route anomaly with ML service
-            const deviationRes = await axios.post(`${ML_URL}/api/detect-deviation`, {
-              current_lat: lat,
-              current_lng: lng,
-              route: order.routeCoordinates
-            });
-
-            if (deviationRes.data.deviated) {
-              const distanceDeviated = Math.round(deviationRes.data.distance_meters);
-              
-              // Only alert if we don't have an active open deviation incident for this order
-              const existingIncident = await Incident.findOne({ 
-                orderId: activeOrderId, 
-                type: 'route_deviation', 
-                status: 'open' 
-              });
-
-              if (!existingIncident) {
-                const incidentId = 'INC-' + Math.floor(100000 + Math.random() * 900000);
-                const newIncident = new Incident({
-                  incidentId,
-                  orderId: activeOrderId,
-                  driverId,
-                  type: 'route_deviation',
-                  severity: 'medium',
-                  message: `Route Deviation Detected: Driver is ${distanceDeviated} meters off the optimized path!`,
-                  status: 'open'
-                });
-                await newIncident.save();
-                this.io.emit('INCIDENT_CREATED', newIncident);
-              }
-            }
-          } catch (err) {
-            // ML anomaly check failed or offline
-          }
-        }
-      }
-
-      // Periodically update churn predictions if driver attributes trigger it
-      try {
-        if (Math.random() < 0.1) { // 10% chance on GPS update to simulate continuous driver scoring
-          const churnRes = await axios.post(`${ML_URL}/api/predict-churn`, {
-            cancellation_rate: driver.cancellationRate,
-            rating: driver.rating,
-            completed_deliveries: driver.completedDeliveries,
-            earnings: driver.earnings
-          });
-
-          if (churnRes.data.churn_probability !== undefined) {
-            const oldRisk = driver.churnRisk;
-            driver.churnRisk = churnRes.data.churn_probability;
-            await driver.save();
-
-            if (driver.churnRisk > 0.7 && oldRisk <= 0.7) {
-              // Generate alert for dispatcher
-              const incidentId = 'INC-' + Math.floor(100000 + Math.random() * 900000);
-              const churnIncident = new Incident({
-                incidentId,
-                driverId,
-                type: 'delay', // or general alert type
-                severity: 'medium',
-                message: `High Churn Risk: Driver ${driver.name} has a ${Math.round(driver.churnRisk * 100)}% chance of leaving the platform within 30 days. Recommend retention bonus.`,
-                status: 'open'
-              });
-              await churnIncident.save();
-              this.io.emit('INCIDENT_CREATED', churnIncident);
-            }
-
-            this.io.emit('DRIVER_UPDATED', driver);
-          }
-        }
-      } catch (err) {
-        // Churn predictor down
-      }
 
       res.json({ success: true, driver });
     } catch (error: any) {

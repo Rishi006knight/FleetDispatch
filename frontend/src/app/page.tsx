@@ -55,31 +55,33 @@ export default function LoginPage() {
       }
     } else if (role === 'driver') {
       const cleanUpperUser = cleanUser.toUpperCase();
-      const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})(-\w+)?$/);
+      const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})-(\d{4})$/);
       
       if (!rtoMatch) {
-        setError('Username must follow Tamil Nadu RTO format: TN-XX-0001 (e.g. TN-01-0001, TN-38-0001)');
+        setError('Username must follow Quantum Express Driver format: TN-XX-1001 (e.g. TN-01-1001, TN-38-1002 - where last 4 digits is unique driver ID)');
         return;
       }
 
       const rtoCode = rtoMatch[1];
+      const driverUnit = rtoMatch[2]; // e.g. "1001", "1002"
       const expectedPassword = `drivertn${rtoCode}`.toLowerCase();
 
       if (cleanPass === expectedPassword || cleanPass === 'driver123') {
         const info = RTO_DISTRICT_MAP[rtoCode] || {
           district: `District ${rtoCode}`,
-          hub: 'Tamil Nadu Regional Terminal',
+          hub: 'State Regional Logistics Center',
           lat: 13.0692,
           lng: 80.1948,
           vehicleType: '20ft Multi-Axle Truck'
         };
 
-        const vehicleId = `TN-${rtoCode}-TR-${rtoMatch[2] ? rtoMatch[2].replace('-', '') : '0001'}`;
-        const driverId = `TRK-${rtoCode}-01`;
-        const driverName = `Driver (${info.district} - ${cleanUpperUser})`;
+        const vehicleId = `TN-${rtoCode}-TR-${driverUnit}`;
+        const driverId = `TRK-${rtoCode}-${driverUnit}`;
+        const driverName = `Driver #${driverUnit} (${info.district} - ${cleanUpperUser})`;
 
         localStorage.setItem('user_role', 'driver');
         localStorage.setItem('driver_id', driverId);
+        localStorage.setItem('driver_unit', driverUnit);
         localStorage.setItem('user_name', driverName);
         localStorage.setItem('vehicle_id', vehicleId);
         localStorage.setItem('rto_code', rtoCode);
@@ -114,8 +116,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickSelectRTO = (rto: string) => {
-    setUsername(`TN-${rto}-0001`);
+  const handleQuickSelectRTO = (rto: string, unit: string = '1001') => {
+    setUsername(`TN-${rto}-${unit}`);
     setPassword(`drivertn${rto}`);
     setError('');
   };
@@ -289,9 +291,9 @@ export default function LoginPage() {
                       <button
                         key={item.rto}
                         type="button"
-                        onClick={() => handleQuickSelectRTO(item.rto)}
+                        onClick={() => handleQuickSelectRTO(item.rto, '1001')}
                         className={`p-1.5 rounded-lg border text-center font-mono font-bold transition-all ${
-                          username === `TN-${item.rto}-0001`
+                          username.startsWith(`TN-${item.rto}`)
                             ? 'bg-cyan-500 text-zinc-950 border-cyan-400 shadow-sm'
                             : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
                         }`}
@@ -304,13 +306,35 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1">
-                    Truck Driver Username <span className="text-zinc-500 font-mono text-[11px]">(Format: TN-XX-0001)</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-zinc-400 text-xs font-semibold">
+                      Truck Driver Username <span className="text-zinc-500 font-mono text-[10px]">(Pattern: TN-XX-1001)</span>
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-zinc-500">Unit:</span>
+                      {['1001', '1002', '1003'].map(unit => {
+                        const currentRto = username.split('-')[1] || '01';
+                        return (
+                          <button
+                            key={unit}
+                            type="button"
+                            onClick={() => handleQuickSelectRTO(currentRto, unit)}
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border transition-all ${
+                              username.endsWith(unit)
+                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                                : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:text-zinc-300'
+                            }`}
+                          >
+                            #{unit}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <input
                     type="text"
                     required
-                    placeholder="TN-01-0001"
+                    placeholder="TN-01-1001"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-cyan-500 text-white"
@@ -333,7 +357,7 @@ export default function LoginPage() {
 
                 <div className="flex items-center justify-between text-[11px] text-zinc-500 px-1">
                   <span className="flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5 text-zinc-600" /> Pattern: <code className="text-zinc-400">username: TN-XX-0001</code>
+                    <Lock className="w-3.5 h-3.5 text-zinc-600" /> Pattern: <code className="text-zinc-400">username: TN-XX-1001</code>
                   </span>
                   <span>Password: <code className="text-cyan-400">drivertnXX</code></span>
                 </div>

@@ -45,76 +45,61 @@ public class DriverController {
     @PostConstruct
     public void seedInitialTamilNaduTruckFleet() {
         if (driverRepository.count() == 0) {
-            // Seed Tamil Nadu Heavy Commercial Fleet
-            Driver d1 = new Driver();
-            d1.setDriverId("TRK-101");
-            d1.setName("Murugan (Express Freightliner)");
-            d1.setPhone("9840112233");
-            d1.setVehicleId("TN-01-TR-8841");
-            d1.setVehicleType("32ft Heavy Trailer");
-            d1.setStatus("online");
-            d1.setCurrentLocation(new Location(13.0844, 80.2936, "Chennai Port Container Terminal"));
-            d1.setRating(4.92);
-            d1.setReliability(0.98);
-            d1.setEarnings(48500.0);
-            d1.setCompletedDeliveries(64);
-            driverRepository.save(d1);
+            // Station hubs with RTO codes, names, coordinates, vehicle types, and initial truck count
+            Object[][] stationData = new Object[][]{
+                { "01", "Chennai Port Container Terminal & CFS", 13.0844, 80.2936, "32ft Heavy Trailer", 4 },
+                { "02", "Ennore Port (Kamarajar Bulk & CFS)", 13.2611, 80.3314, "40ft Container Freightliner", 3 },
+                { "04", "Chennai - Koyambedu Freight Terminal", 13.0692, 80.1948, "20ft Multi-Axle Truck", 3 },
+                { "22", "Chennai - Tambaram South Gateway", 12.9249, 80.1000, "14ft Eicher Container", 2 },
+                { "38", "Coimbatore Industrial Logistics Park", 11.0168, 76.9558, "Refrigerated Reefer Truck", 4 },
+                { "58", "Madurai Ring Road Logistics Terminal", 9.9252, 78.1198, "20ft Multi-Axle Truck", 3 },
+                { "45", "Trichy Central Transit Corridor", 10.7905, 78.7047, "32ft Heavy Trailer", 3 },
+                { "27", "Salem Steel Logistics Center", 11.6643, 78.1460, "14ft Eicher Container", 2 },
+                { "72", "Tirunelveli SIPCOT Terminal", 8.7139, 77.7567, "20ft Multi-Axle Truck", 2 },
+                { "23", "Vellore Industrial Logistics Park", 12.9165, 79.1325, "32ft Heavy Trailer", 2 },
+                { "39", "Tiruppur Apparel Export Hub", 11.1085, 77.3411, "20ft Multi-Axle Truck", 3 },
+                { "33", "Erode SIPCOT Logistics Complex", 11.3410, 77.7172, "Refrigerated Reefer Truck", 2 },
+                { "69", "Thoothukudi V.O.C Port Terminal", 8.7642, 78.1348, "40ft Container Freightliner", 3 },
+                { "49", "Thanjavur Delta Terminal", 10.7870, 79.1378, "14ft Eicher Container", 2 },
+                { "70", "Hosur Auto & Electronics Freight Hub", 12.7409, 77.8253, "32ft Heavy Trailer", 3 },
+                { "74", "Nagercoil Gateway Depot", 8.1833, 77.4119, "20ft Multi-Axle Truck", 2 },
+            };
 
-            Driver d2 = new Driver();
-            d2.setDriverId("TRK-102");
-            d2.setName("Senthil Kumar (Reefer Cold Fleet)");
-            d2.setPhone("9840223344");
-            d2.setVehicleId("TN-38-CT-9022");
-            d2.setVehicleType("Refrigerated Reefer Truck");
-            d2.setStatus("online");
-            d2.setCurrentLocation(new Location(11.0168, 76.9558, "Coimbatore Logistics Hub"));
-            d2.setRating(4.88);
-            d2.setReliability(0.95);
-            d2.setEarnings(36200.0);
-            d2.setCompletedDeliveries(42);
-            driverRepository.save(d2);
+            for (Object[] station : stationData) {
+                String rto = (String) station[0];
+                String hubName = (String) station[1];
+                double lat = (Double) station[2];
+                double lng = (Double) station[3];
+                String vType = (String) station[4];
+                int count = (Integer) station[5];
 
-            Driver d3 = new Driver();
-            d3.setDriverId("TRK-103");
-            d3.setName("Arumugam (Multi-Axle Heavy)");
-            d3.setPhone("9840334455");
-            d3.setVehicleId("TN-58-MD-4410");
-            d3.setVehicleType("20ft Multi-Axle Truck");
-            d3.setStatus("online");
-            d3.setCurrentLocation(new Location(9.9252, 78.1198, "Madurai Ring Road Hub"));
-            d3.setRating(4.95);
-            d3.setReliability(0.97);
-            d3.setEarnings(52000.0);
-            d3.setCompletedDeliveries(58);
-            driverRepository.save(d3);
+                for (int i = 1; i <= count; i++) {
+                    int driverNum = 1000 + i; // 1001, 1002, 1003...
+                    String driverId = "TRK-" + rto + "-" + driverNum;
+                    String vehicleId = "TN-" + rto + "-TR-" + driverNum;
+                    String driverName = "Driver #" + driverNum + " (" + hubName.split(" ")[0] + " - TN-" + rto + "-" + driverNum + ")";
 
-            Driver d4 = new Driver();
-            d4.setDriverId("TRK-104");
-            d4.setName("Karthik Raja (Container Express)");
-            d4.setPhone("9840445566");
-            d4.setVehicleId("TN-27-SL-1102");
-            d4.setVehicleType("14ft Eicher Container");
-            d4.setStatus("online");
-            d4.setCurrentLocation(new Location(11.6643, 78.1460, "Salem Steel Plant Road Hub"));
-            d4.setRating(4.85);
-            d4.setReliability(0.94);
-            d4.setEarnings(29400.0);
-            d4.setCompletedDeliveries(38);
-            driverRepository.save(d4);
+                    Driver d = new Driver();
+                    d.setDriverId(driverId);
+                    d.setName(driverName);
+                    d.setPhone("9840" + rto + driverNum);
+                    d.setVehicleId(vehicleId);
+                    d.setVehicleType(vType);
+                    d.setStatus("online");
+                    // Slight coordinate jitter so trucks don't sit on identical pixel
+                    double jitterLat = (Math.random() - 0.5) * 0.006;
+                    double jitterLng = (Math.random() - 0.5) * 0.006;
+                    d.setCurrentLocation(new Location(lat + jitterLat, lng + jitterLng, hubName));
+                    d.setRating(Math.round((4.85 + Math.random() * 0.14) * 100.0) / 100.0);
+                    d.setReliability(Math.round((0.95 + Math.random() * 0.04) * 100.0) / 100.0);
+                    d.setEarnings(Math.round((32000.0 + Math.random() * 25000.0) * 100.0) / 100.0);
+                    d.setCompletedDeliveries((int)(40 + Math.random() * 35));
+                    d.setCancellationRate(0.02);
+                    d.setChurnRisk(0.05);
 
-            Driver d5 = new Driver();
-            d5.setDriverId("TRK-105");
-            d5.setName("Velu Pandian (Port Freightliner)");
-            d5.setPhone("9840556677");
-            d5.setVehicleId("TN-69-TT-7733");
-            d5.setVehicleType("40ft Container Freightliner");
-            d5.setStatus("online");
-            d5.setCurrentLocation(new Location(8.7642, 78.1348, "Thoothukudi Port Terminal"));
-            d5.setRating(4.90);
-            d5.setReliability(0.96);
-            d5.setEarnings(61000.0);
-            d5.setCompletedDeliveries(72);
-            driverRepository.save(d5);
+                    driverRepository.save(d);
+                }
+            }
         }
     }
 
@@ -225,30 +210,6 @@ public class DriverController {
                         socketIOService.emit("INCIDENT_CREATED", inc);
                     }
                 }
-            }
-        }
-
-        // Periodically update churn predictions
-        if (Math.random() < 0.1) {
-            Double churnProb = mlServiceClient.predictChurn(driver.getCancellationRate(), driver.getRating(), driver.getCompletedDeliveries(), driver.getEarnings());
-            if (churnProb != null) {
-                double oldRisk = driver.getChurnRisk();
-                driver.setChurnRisk(churnProb);
-                driverRepository.save(driver);
-
-                if (driver.getChurnRisk() > 0.7 && oldRisk <= 0.7) {
-                    Incident churnIncident = new Incident(
-                            "INC-" + (int)(100000 + Math.random() * 900000),
-                            null,
-                            driverId,
-                            "delay",
-                            "medium",
-                            "Fleet Retention Alert: Heavy Truck Driver " + driver.getName() + " (" + driver.getVehicleId() + ") churn probability is " + Math.round(driver.getChurnRisk() * 100) + "%."
-                    );
-                    incidentRepository.save(churnIncident);
-                    socketIOService.emit("INCIDENT_CREATED", churnIncident);
-                }
-                socketIOService.emit("DRIVER_UPDATED", driver);
             }
         }
 

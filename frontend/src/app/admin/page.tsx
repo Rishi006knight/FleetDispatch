@@ -391,7 +391,14 @@ export default function AdminDashboard() {
                       </span>
                     </div>
 
-                    <p className="text-xs font-semibold text-zinc-300 truncate">{order.customerName}</p>
+                    <div className="flex items-center justify-between text-xs font-semibold text-zinc-300 truncate">
+                      <span className="truncate">{order.customerName}</span>
+                      {order.businessCode && (
+                        <span className="text-[9px] font-mono font-bold bg-zinc-800 text-cyan-400 px-1.5 py-0.5 rounded border border-zinc-700">
+                          {order.businessCode}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-1">
                       <span>{order.package?.weight || 10} MT • {order.package?.type || 'Cargo'}</span>
                       <span className="font-bold text-cyan-400">₹{order.price?.toLocaleString()}</span>

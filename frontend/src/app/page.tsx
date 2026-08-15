@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Truck, UserCircle2, ArrowRight, Lock, KeyRound, Warehouse, Info } from 'lucide-react';
+import { ShieldCheck, Truck, UserCircle2, ArrowRight, Lock, KeyRound, Warehouse, Info, Building2 } from 'lucide-react';
 
 const RTO_DISTRICT_MAP: Record<string, { district: string; hub: string; lat: number; lng: number; vehicleType: string }> = {
   '01': { district: 'Chennai Central', hub: 'Chennai Port Container Terminal', lat: 13.0844, lng: 80.2936, vehicleType: '32ft Heavy Trailer' },
@@ -23,22 +23,30 @@ const RTO_DISTRICT_MAP: Record<string, { district: string; hub: string; lat: num
   '74': { district: 'Nagercoil', hub: 'Kanyakumari Gateway Depot', lat: 8.1833, lng: 77.4119, vehicleType: '20ft Multi-Axle Truck' },
 };
 
+const SAMPLE_B2B_BUSINESSES = [
+  { code: 'ABC123', name: 'ABC Global Logistics & Freight Ltd' },
+  { code: 'KVI101', name: 'Kovai Industrial Components Ltd' },
+  { code: 'CHE001', name: 'Chennai Port Container Exporters' },
+  { code: 'MDU909', name: 'Madurai Spun Silk & Textiles' },
+];
+
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<'admin' | 'driver' | 'customer'>('driver');
-  const [username, setUsername] = useState('TN-01-0001');
-  const [password, setPassword] = useState('drivertn01');
+  const [role, setRole] = useState<'admin' | 'driver' | 'customer'>('customer');
+  const [username, setUsername] = useState('ABC Global Logistics & Freight Ltd');
+  const [password, setPassword] = useState('');
+  const [businessCode, setBusinessCode] = useState('ABC123');
   const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const cleanUser = username.trim().toUpperCase();
+    const cleanUser = username.trim();
     const cleanPass = password.trim().toLowerCase();
 
     if (role === 'admin') {
-      if (cleanUser === 'ADMIN' && cleanPass === 'admin123') {
+      if (cleanUser.toUpperCase() === 'ADMIN' && cleanPass === 'admin123') {
         localStorage.setItem('user_role', 'admin');
         localStorage.setItem('user_name', 'Tamil Nadu System Dispatcher');
         router.push('/admin');
@@ -46,15 +54,15 @@ export default function LoginPage() {
         setError('Invalid dispatcher credentials. Hint: admin / admin123');
       }
     } else if (role === 'driver') {
-      // Driver format: TN-XX-0001 or TN-XX-XXXX, password: drivertnXX
-      const rtoMatch = cleanUser.match(/^TN-(\d{2})(-\w+)?$/);
+      const cleanUpperUser = cleanUser.toUpperCase();
+      const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})(-\w+)?$/);
       
       if (!rtoMatch) {
         setError('Username must follow Tamil Nadu RTO format: TN-XX-0001 (e.g. TN-01-0001, TN-38-0001)');
         return;
       }
 
-      const rtoCode = rtoMatch[1]; // e.g. "01", "38"
+      const rtoCode = rtoMatch[1];
       const expectedPassword = `drivertn${rtoCode}`.toLowerCase();
 
       if (cleanPass === expectedPassword || cleanPass === 'driver123') {
@@ -68,7 +76,7 @@ export default function LoginPage() {
 
         const vehicleId = `TN-${rtoCode}-TR-${rtoMatch[2] ? rtoMatch[2].replace('-', '') : '0001'}`;
         const driverId = `TRK-${rtoCode}-01`;
-        const driverName = `Driver (${info.district} - ${cleanUser})`;
+        const driverName = `Driver (${info.district} - ${cleanUpperUser})`;
 
         localStorage.setItem('user_role', 'driver');
         localStorage.setItem('driver_id', driverId);
@@ -82,12 +90,26 @@ export default function LoginPage() {
 
         router.push('/driver');
       } else {
-        setError(`Invalid driver credentials for ${cleanUser}. Password must be "drivertn${rtoCode}"`);
+        setError(`Invalid driver credentials for ${cleanUpperUser}. Password must be "drivertn${rtoCode}"`);
       }
     } else {
-      // Customer login
+      // B2B Shipper login with unique Business Code (e.g. ABC123)
+      const cleanCode = businessCode.trim().toUpperCase();
+      
+      // Validate business code format: 3 letters + 3 numbers (e.g. ABC123) or at least 4 alphanumeric chars
+      if (!cleanCode || cleanCode.length < 4) {
+        setError('Please enter a valid unique Business Code (e.g. ABC123 - 3 Letters followed by 3 Numbers).');
+        return;
+      }
+
+      if (!cleanUser) {
+        setError('Please enter your Company / Shipper Business Name.');
+        return;
+      }
+
       localStorage.setItem('user_role', 'customer');
-      localStorage.setItem('user_name', username || 'Tamil Nadu B2B Shipper');
+      localStorage.setItem('user_name', cleanUser);
+      localStorage.setItem('business_code', cleanCode);
       router.push('/customer');
     }
   };
@@ -95,6 +117,12 @@ export default function LoginPage() {
   const handleQuickSelectRTO = (rto: string) => {
     setUsername(`TN-${rto}-0001`);
     setPassword(`drivertn${rto}`);
+    setError('');
+  };
+
+  const handleQuickSelectBusiness = (b: { code: string; name: string }) => {
+    setBusinessCode(b.code);
+    setUsername(b.name);
     setError('');
   };
 
@@ -123,6 +151,17 @@ export default function LoginPage() {
           {/* Tab Selector */}
           <div className="grid grid-cols-3 gap-2 p-1.5 bg-zinc-950 border border-zinc-800 rounded-xl">
             <button
+              onClick={() => { setRole('customer'); setError(''); setUsername('ABC Global Logistics & Freight Ltd'); setBusinessCode('ABC123'); }}
+              className={`flex flex-col items-center justify-center py-2.5 rounded-lg text-xs font-bold transition-all ${
+                role === 'customer'
+                  ? 'bg-cyan-500 text-zinc-950 shadow-md'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+              }`}
+            >
+              <Building2 className="w-4 h-4 mb-1" />
+              B2B Shipper
+            </button>
+            <button
               onClick={() => { setRole('driver'); setError(''); setUsername('TN-01-0001'); setPassword('drivertn01'); }}
               className={`flex flex-col items-center justify-center py-2.5 rounded-lg text-xs font-bold transition-all ${
                 role === 'driver'
@@ -144,21 +183,79 @@ export default function LoginPage() {
               <ShieldCheck className="w-4 h-4 mb-1" />
               Dispatcher Tower
             </button>
-            <button
-              onClick={() => { setRole('customer'); setError(''); setUsername(''); setPassword(''); }}
-              className={`flex flex-col items-center justify-center py-2.5 rounded-lg text-xs font-bold transition-all ${
-                role === 'customer'
-                  ? 'bg-cyan-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-              }`}
-            >
-              <UserCircle2 className="w-4 h-4 mb-1" />
-              B2B Shipper
-            </button>
           </div>
 
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-4">
+            
+            {/* B2B Shipper Column */}
+            {role === 'customer' && (
+              <div className="space-y-4">
+                
+                {/* Business Code Quick Select Chips */}
+                <div className="p-3 bg-zinc-950/80 border border-zinc-800 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400 uppercase">
+                    <span className="flex items-center gap-1.5 text-cyan-400">
+                      <KeyRound className="w-3.5 h-3.5" /> Sample Business Accounts:
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {SAMPLE_B2B_BUSINESSES.map(b => (
+                      <button
+                        key={b.code}
+                        type="button"
+                        onClick={() => handleQuickSelectBusiness(b)}
+                        className={`p-2 rounded-xl border text-left transition-all ${
+                          businessCode === b.code
+                            ? 'bg-cyan-500 text-zinc-950 border-cyan-400 font-bold shadow-sm'
+                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
+                        }`}
+                      >
+                        <span className="block font-mono font-extrabold text-xs">{b.code}</span>
+                        <span className="block text-[10px] truncate">{b.name.split(' ')[0]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 text-xs font-semibold mb-1">
+                    Company / Shipper Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. ABC Global Logistics & Freight Ltd"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-zinc-400 text-xs font-semibold mb-1 flex items-center justify-between">
+                    <span>Unique Business Code / Password</span>
+                    <span className="text-zinc-500 font-mono text-[10px] uppercase">(Pattern: ABC123)</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ABC123"
+                    value={businessCode}
+                    onChange={(e) => setBusinessCode(e.target.value.toUpperCase())}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-mono font-bold tracking-wider focus:outline-none focus:border-cyan-500 text-cyan-400 uppercase"
+                  />
+                </div>
+
+                <div className="p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-[11px] text-zinc-400 flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Your quotations and billing records are isolated by this unique Business Code (e.g. <strong>{businessCode || 'ABC123'}</strong>).</span>
+                </div>
+              </div>
+            )}
+
+            {/* Heavy Truck Driver Column */}
             {role === 'driver' && (
               <div className="space-y-4">
                 
@@ -243,6 +340,7 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Dispatcher Column */}
             {role === 'admin' && (
               <div className="space-y-4">
                 <div>
@@ -269,24 +367,6 @@ export default function LoginPage() {
                 </div>
                 <div className="text-[11px] text-zinc-500">
                   Default Dispatcher Credentials: <code className="text-cyan-400">admin / admin123</code>
-                </div>
-              </div>
-            )}
-
-            {role === 'customer' && (
-              <div className="space-y-4">
-                <p className="text-zinc-400 text-xs border border-zinc-800 p-3 bg-zinc-950/50 rounded-xl text-center">
-                  B2B Shipper Access for inter-warehouse freight bookings and quotation approvals across Tamil Nadu.
-                </p>
-                <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1">Shipper Business Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Kovai Industrial Components Ltd"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white"
-                  />
                 </div>
               </div>
             )}

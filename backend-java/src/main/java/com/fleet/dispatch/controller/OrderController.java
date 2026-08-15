@@ -108,10 +108,16 @@ public class OrderController {
 
             String orderId = "ORD-" + (int) (100000 + Math.random() * 900000);
 
+            String businessCode = (String) body.getOrDefault("businessCode", "ABC123");
+            if (businessCode == null || businessCode.isBlank()) {
+                businessCode = "ABC123";
+            }
+
             Order order = new Order();
             order.setOrderId(orderId);
             order.setCustomerName(customerName);
             order.setCustomerPhone(customerPhone != null ? customerPhone : "9840123456");
+            order.setBusinessCode(businessCode.toUpperCase().trim());
             order.setPickup(pickup);
             order.setDrop(drop);
             order.setPackageInfo(new PackageInfo(packageWeight, packageType != null ? packageType : "Machinery & Cargo"));
@@ -520,8 +526,14 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
-        return ResponseEntity.ok(orderRepository.findAll());
+    public ResponseEntity<List<Order>> getAllOrders(@RequestParam(required = false) String businessCode) {
+        List<Order> all = orderRepository.findAll();
+        if (businessCode != null && !businessCode.isBlank()) {
+            return ResponseEntity.ok(all.stream()
+                    .filter(o -> businessCode.equalsIgnoreCase(o.getBusinessCode()))
+                    .collect(Collectors.toList()));
+        }
+        return ResponseEntity.ok(all);
     }
 
     @GetMapping("/{orderId}")

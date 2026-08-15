@@ -9,6 +9,7 @@ public class Order {
     private String orderId;
     private String customerName;
     private String customerPhone;
+    private String businessCode = "ABC123"; // Unique Business Code (e.g. ABC123)
     private Location pickup;
     private Location drop;
 
@@ -69,6 +70,14 @@ public class Order {
 
     public void setCustomerPhone(String customerPhone) {
         this.customerPhone = customerPhone;
+    }
+
+    public String getBusinessCode() {
+        return businessCode;
+    }
+
+    public void setBusinessCode(String businessCode) {
+        this.businessCode = businessCode;
     }
 
     public Location getPickup() {

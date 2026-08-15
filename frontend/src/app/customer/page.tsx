@@ -47,12 +47,14 @@ export default function CustomerPortal() {
   const [bookingStatus, setBookingStatus] = useState<'idle' | 'loading' | 'success'>('idle');
 
   // Quotation Bill Review Modal
+  const [businessCode, setBusinessCode] = useState('ABC123');
   const [showBillModal, setShowBillModal] = useState(false);
   const [decisionLoading, setDecisionLoading] = useState(false);
 
   useEffect(() => {
     const role = localStorage.getItem('user_role');
     const name = localStorage.getItem('user_name') || 'Tamil Nadu Cargo Business';
+    const bCode = localStorage.getItem('business_code') || 'ABC123';
     
     if (role !== 'customer') {
       router.push('/');
@@ -60,6 +62,7 @@ export default function CustomerPortal() {
     }
 
     setCustomerName(name);
+    setBusinessCode(bCode);
     setCustomerPhone('9840123456');
 
     // Connect to websocket
@@ -67,40 +70,52 @@ export default function CustomerPortal() {
     setSocket(newSocket);
 
     // Initial load
-    fetchData();
+    fetchData(bCode);
 
     newSocket.on('connect', () => {
-      newSocket.emit('join_room', 'customer');
+      newSocket.emit('join_room', `customer_${bCode}`);
     });
 
     newSocket.on('ORDER_CREATED', (order: any) => {
-      setOrders(prev => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
+      if (!order.businessCode || order.businessCode === bCode) {
+        setOrders(prev => [order, ...prev.filter(o => o.orderId !== order.orderId)]);
+      }
     });
 
     newSocket.on('BILL_QUOTED', (order: any) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
-      setShowBillModal(true);
+      if (!order.businessCode || order.businessCode === bCode) {
+        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+        setShowBillModal(true);
+      }
     });
 
     newSocket.on('BILL_ACCEPTED', (order: any) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      if (!order.businessCode || order.businessCode === bCode) {
+        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      }
     });
 
     newSocket.on('BILL_REJECTED', (order: any) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      if (!order.businessCode || order.businessCode === bCode) {
+        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      }
     });
 
     newSocket.on('ORDER_ASSIGNED', ({ order }: any) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      if (!order.businessCode || order.businessCode === bCode) {
+        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      }
     });
 
     newSocket.on('ORDER_STATUS_UPDATED', (order: any) => {
-      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
-      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      if (!order.businessCode || order.businessCode === bCode) {
+        setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
+        setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+      }
     });
 
     newSocket.on('DRIVER_UPDATED', (driver: any) => {
@@ -121,12 +136,15 @@ export default function CustomerPortal() {
     };
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (bCode?: string) => {
+    const code = bCode || localStorage.getItem('business_code') || 'ABC123';
     try {
-      const ordersRes = await axios.get(`${API_URL}/api/orders`);
+      const ordersRes = await axios.get(`${API_URL}/api/orders?businessCode=${code}`);
       setOrders(ordersRes.data);
       if (ordersRes.data.length > 0) {
         setSelectedOrder(ordersRes.data[0]);
+      } else {
+        setSelectedOrder(null);
       }
 
       const driversRes = await axios.get(`${API_URL}/api/drivers`);
@@ -161,6 +179,7 @@ export default function CustomerPortal() {
       const res = await axios.post(`${API_URL}/api/orders`, {
         customerName,
         customerPhone,
+        businessCode,
         pickup: pickupData,
         drop: dropData,
         packageWeight: packageWeight,
@@ -224,7 +243,9 @@ export default function CustomerPortal() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base font-extrabold text-white tracking-wide">Tamil Nadu B2B Freight & Warehousing</h1>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold">16 Hubs Active</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold font-mono">
+                Code: {businessCode}
+              </span>
             </div>
             <span className="block text-xs text-zinc-400">Shipper Account: {customerName}</span>
           </div>

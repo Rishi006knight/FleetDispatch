@@ -23,11 +23,12 @@ async function runTests() {
     });
     console.log('');
 
-    // 3. Book B2B Heavy Freight & Warehouse Storage Request (Coimbatore -> Chennai Port)
-    console.log('[3] Shipper books 15 Tonne Machinery Freight from Coimbatore Hub to Chennai Port with 4 Days Cold/Pallet Storage...');
+    // 3. Book B2B Heavy Freight & Warehouse Storage Request (Coimbatore -> Chennai Port) with Unique Business Code
+    console.log('[3] Shipper books 15 Tonne Machinery Freight from Coimbatore Hub with Business Code [KVI101]...');
     const order = await axios.post(`${BACKEND_URL}/orders`, {
       customerName: 'Kovai Industrial Components Ltd',
       customerPhone: '9840112233',
+      businessCode: 'KVI101',
       pickup: { lat: 11.0168, lng: 76.9558, address: 'Peelamedu Industrial Logistics Park, Coimbatore' },
       drop: { lat: 13.0844, lng: 80.2936, address: 'Chennai Port Trust Container Terminal, Rajaji Salai, Chennai' },
       packageWeight: 15.0,
@@ -41,6 +42,7 @@ async function runTests() {
     });
     const orderId = order.data.orderId;
     console.log(`    ✓ Consignment Request Created: ${orderId}`);
+    console.log(`    ✓ Business Code: ${order.data.businessCode} (Isolated to Kovai Industrial Components Ltd)`);
     console.log(`    ✓ Status: ${order.data.status} (Awaiting Dispatcher Official Bill)`);
     console.log(`    ✓ Preliminary Base Freight: ₹${order.data.billingDetails?.freightBase}`);
     console.log(`    ✓ Warehouse Storage Fee: ₹${order.data.billingDetails?.storageFee}`);

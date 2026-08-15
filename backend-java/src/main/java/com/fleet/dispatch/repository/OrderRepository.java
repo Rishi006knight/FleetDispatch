@@ -1,42 +1,21 @@
 package com.fleet.dispatch.repository;
 
 import com.fleet.dispatch.model.Order;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class OrderRepository {
-    private final Map<String, Order> storage = new ConcurrentHashMap<>();
+public interface OrderRepository extends MongoRepository<Order, String> {
 
-    public Order save(Order order) {
-        if (order.getOrderId() == null || order.getOrderId().isEmpty()) {
-            order.setOrderId("ORD-" + (int)(100000 + Math.random() * 900000));
-        }
-        order.setUpdatedAt(new Date());
-        storage.put(order.getOrderId(), order);
-        return order;
-    }
+    /** Lookup by business-key (same as findById since orderId is @Id) */
+    Optional<Order> findByOrderId(String orderId);
 
-    public Optional<Order> findByOrderId(String orderId) {
-        return Optional.ofNullable(storage.get(orderId));
-    }
+    /** All orders for a specific driver */
+    List<Order> findByDriverId(String driverId);
 
-    public List<Order> findAll() {
-        return storage.values().stream()
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .collect(Collectors.toList());
-    }
-
-    public List<Order> findByDriverId(String driverId) {
-        return storage.values().stream()
-                .filter(o -> driverId.equals(o.getDriverId()))
-                .collect(Collectors.toList());
-    }
-
-    public long count() {
-        return storage.size();
-    }
+    /** All orders sorted by createdAt descending — replaces the hand-rolled sorted findAll() */
+    List<Order> findAllByOrderByCreatedAtDesc();
 }

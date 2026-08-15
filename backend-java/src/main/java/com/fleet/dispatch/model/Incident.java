@@ -1,8 +1,13 @@
 package com.fleet.dispatch.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.Date;
 
+@Document(collection = "incidents")
 public class Incident {
+    @Id
     private String incidentId;
     private String orderId;
     private String driverId;

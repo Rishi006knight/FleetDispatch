@@ -14,6 +14,7 @@ import dynamic from 'next/dynamic';
 import { TAMIL_NADU_WAREHOUSES } from '../constants/locations';
 
 const Map = dynamic(() => import('../components/Map'), { ssr: false });
+const TrackingMap = dynamic(() => import('../components/Map'), { ssr: false });
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function AdminDashboard() {

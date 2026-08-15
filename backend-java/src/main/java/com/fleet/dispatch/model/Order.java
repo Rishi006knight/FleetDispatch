@@ -1,11 +1,16 @@
 package com.fleet.dispatch.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Document(collection = "orders")
 public class Order {
+    @Id
     private String orderId;
     private String customerName;
     private String customerPhone;

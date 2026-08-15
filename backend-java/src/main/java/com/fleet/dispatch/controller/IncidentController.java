@@ -23,7 +23,7 @@ public class IncidentController {
 
     @GetMapping
     public ResponseEntity<List<Incident>> getIncidents() {
-        return ResponseEntity.ok(incidentRepository.findAll());
+        return ResponseEntity.ok(incidentRepository.findAllByOrderByTimestampDesc());
     }
 
     @PostMapping

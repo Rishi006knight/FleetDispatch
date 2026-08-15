@@ -527,7 +527,7 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<Order>> getAllOrders(@RequestParam(required = false) String businessCode) {
-        List<Order> all = orderRepository.findAll();
+        List<Order> all = orderRepository.findAllByOrderByCreatedAtDesc();
         if (businessCode != null && !businessCode.isBlank()) {
             return ResponseEntity.ok(all.stream()
                     .filter(o -> businessCode.equalsIgnoreCase(o.getBusinessCode()))

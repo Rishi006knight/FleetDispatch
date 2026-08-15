@@ -103,7 +103,7 @@ public class AnalyticsController {
         double demandIncreasePercent = body.get("demandIncreasePercent") != null ? Double.parseDouble(body.get("demandIncreasePercent").toString()) : 0.0;
         String zoneAlert = (String) body.getOrDefault("zoneAlert", "all");
 
-        int currentDriversCount = (int) Math.max(1, driverRepository.countActiveDrivers());
+        int currentDriversCount = (int) Math.max(1, driverRepository.countByStatusNot("offline"));
         int currentOrdersCount = (int) Math.max(1, orderRepository.count());
 
         Map<String, Object> simResult = mlServiceClient.runSimulation(

@@ -1,30 +1,14 @@
 package com.fleet.dispatch.repository;
 
 import com.fleet.dispatch.model.Telemetry;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Repository
-public class TelemetryRepository {
-    private final List<Telemetry> logs = Collections.synchronizedList(new ArrayList<>());
+public interface TelemetryRepository extends MongoRepository<Telemetry, String> {
 
-    public Telemetry save(Telemetry telemetry) {
-        if (telemetry.getId() == null || telemetry.getId().isEmpty()) {
-            telemetry.setId(UUID.randomUUID().toString());
-        }
-        logs.add(telemetry);
-        return telemetry;
-    }
-
-    public List<Telemetry> findByDriverId(String driverId) {
-        synchronized (logs) {
-            return logs.stream()
-                    .filter(t -> driverId != null && driverId.equals(t.getDriverId()))
-                    .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
-                    .collect(Collectors.toList());
-        }
-    }
+    /** All telemetry events for a driver, newest first */
+    List<Telemetry> findByDriverIdOrderByTimestampDesc(String driverId);
 }

@@ -1,39 +1,23 @@
 package com.fleet.dispatch.repository;
 
 import com.fleet.dispatch.model.Incident;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class IncidentRepository {
-    private final Map<String, Incident> storage = new ConcurrentHashMap<>();
+public interface IncidentRepository extends MongoRepository<Incident, String> {
 
-    public Incident save(Incident incident) {
-        if (incident.getIncidentId() == null || incident.getIncidentId().isEmpty()) {
-            incident.setIncidentId("INC-" + (int)(100000 + Math.random() * 900000));
-        }
-        storage.put(incident.getIncidentId(), incident);
-        return incident;
-    }
+    /** Lookup by business-key (same as findById since incidentId is @Id) */
+    Optional<Incident> findByIncidentId(String incidentId);
 
-    public Optional<Incident> findByIncidentId(String incidentId) {
-        return Optional.ofNullable(storage.get(incidentId));
-    }
+    /** All incidents sorted by timestamp descending — replaces the hand-rolled sorted findAll() */
+    List<Incident> findAllByOrderByTimestampDesc();
 
-    public Optional<Incident> findOpenIncident(String orderId, String type) {
-        return storage.values().stream()
-                .filter(i -> orderId != null && orderId.equals(i.getOrderId()) 
-                        && type != null && type.equalsIgnoreCase(i.getType()) 
-                        && "open".equalsIgnoreCase(i.getStatus()))
-                .findFirst();
-    }
-
-    public List<Incident> findAll() {
-        return storage.values().stream()
-                .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
-                .collect(Collectors.toList());
-    }
+    /** Find an open incident matching orderId + type — replaces the stream().filter() logic */
+    @Query("{ 'orderId': ?0, 'type': ?1, 'status': 'open' }")
+    Optional<Incident> findOpenIncident(String orderId, String type);
 }

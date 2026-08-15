@@ -44,8 +44,10 @@ public class DriverController {
 
     @PostConstruct
     public void seedInitialTamilNaduTruckFleet() {
-        // Clear and re-seed to ensure all drivers have full Name(address-username) format
-        driverRepository.deleteAll();
+        // Only seed if the drivers collection is empty (preserves data across restarts)
+        if (driverRepository.count() > 0) {
+            return;
+        }
 
         // Matrix of 16 Stations: RTO, Station Address, Lat, Lng, Driver Roster: [Driver Name, Assigned Truck Type]
         Object[][] stations = new Object[][]{

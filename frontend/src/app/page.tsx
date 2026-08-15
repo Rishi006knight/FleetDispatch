@@ -144,116 +144,108 @@ export default function LandingLoginPage() {
     <div className="relative min-h-screen w-full bg-[#0c1220] text-white flex flex-col justify-between overflow-x-hidden select-none">
       
       {/* ==================================================================== */}
-      {/* BACKGROUND: 3-Layer Subtle Atmospheric Logistics Network              */}
+      {/* BACKGROUND: Accurate Tamil Nadu Layered Logistics Background          */}
       {/* ==================================================================== */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
+      <div className="tn-map-bg">
         
-        {/* Layer 1: Soft Ambient Radial Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[650px] bg-gradient-to-tr from-amber-500/5 via-blue-900/10 to-transparent rounded-full blur-3xl opacity-40"></div>
-        
-        {/* Layer 2: Network Lines & State Contour (Very Faint Watermark: 8% Opacity) */}
+        {/* Soft Radial Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[550px] bg-gradient-to-tr from-amber-500/5 via-blue-900/10 to-transparent rounded-full blur-3xl opacity-40"></div>
+
         <svg 
-          viewBox="0 0 1000 900" 
-          className="absolute w-[100vw] max-w-[1500px] h-[75vh] opacity-[0.08] blur-[1px] pointer-events-none"
-          style={{ transform: 'translateY(-20px)' }}
+          viewBox="0 0 350 480" 
+          className="pointer-events-none"
         >
-          {/* Stylized Tamil Nadu State Contour */}
-          <path
-            d="M 680 120 
-               Q 740 180 730 260 
-               Q 780 340 760 420 
-               Q 790 520 740 600 
-               Q 700 700 660 760 
-               Q 600 840 500 880 
-               Q 440 860 400 800 
-               Q 360 720 380 640 
-               Q 340 560 320 480 
-               Q 300 400 350 320 
-               Q 400 240 480 180 
-               Q 560 130 680 120 Z"
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth="1.2"
-            strokeDasharray="4 4"
+          <defs>
+            <filter id="hubSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Accurate, recognizable Tamil Nadu State Shape with 3% amber fill & 15% border */}
+          <path 
+            d="M 200 30 
+               C 220 28, 260 50, 275 80 
+               C 285 100, 280 130, 285 170 
+               C 290 200, 275 235, 255 260 
+               C 245 275, 225 305, 210 335 
+               C 200 360, 185 395, 170 420 
+               C 155 445, 130 435, 120 400 
+               C 110 365, 125 330, 140 300 
+               C 150 280, 140 260, 125 230 
+               C 110 200, 115 165, 135 135 
+               C 150 110, 160 80, 175 55 
+               C 185 38, 190 32, 200 30 Z"
+            fill="rgba(230, 126, 34, 0.03)"
+            stroke="rgba(230, 126, 34, 0.15)"
+            strokeWidth="1.5"
           />
 
-          {/* Logistics Corridor Lines */}
-          <g stroke="#e67e22" strokeWidth="1" fill="none">
+          {/* Static Connection Lines — 8% opacity, thin, NO spinning */}
+          <g stroke="rgba(230, 126, 34, 0.08)" strokeWidth="1" fill="none">
             {/* Chennai -> Ennore */}
-            <line x1="710" y1="180" x2="720" y2="140" />
+            <line x1="275" y1="80" x2="278" y2="62" />
             {/* Chennai -> Koyambedu -> Tambaram */}
-            <line x1="710" y1="180" x2="685" y2="200" />
-            <line x1="685" y1="200" x2="670" y2="245" />
+            <line x1="275" y1="80" x2="265" y2="92" />
+            <line x1="265" y1="92" x2="255" y2="115" />
             {/* Chennai -> Vellore -> Hosur */}
-            <line x1="710" y1="180" x2="580" y2="230" />
-            <line x1="580" y1="230" x2="480" y2="260" />
+            <line x1="275" y1="80" x2="215" y2="105" />
+            <line x1="215" y1="105" x2="168" y2="115" />
             {/* Vellore -> Salem -> Erode -> Tiruppur -> Coimbatore */}
-            <line x1="580" y1="230" x2="520" y2="380" />
-            <line x1="520" y1="380" x2="470" y2="440" />
-            <line x1="470" y1="440" x2="420" y2="460" />
-            <line x1="420" y1="460" x2="370" y2="480" />
+            <line x1="215" y1="105" x2="195" y2="175" />
+            <line x1="195" y1="175" x2="168" y2="205" />
+            <line x1="168" y1="205" x2="150" y2="218" />
+            <line x1="150" y1="218" x2="130" y2="228" />
             {/* Salem -> Trichy -> Thanjavur */}
-            <line x1="520" y1="380" x2="560" y2="510" />
-            <line x1="560" y1="510" x2="640" y2="520" />
+            <line x1="195" y1="175" x2="215" y2="238" />
+            <line x1="215" y1="238" x2="250" y2="245" />
             {/* Trichy -> Madurai -> Tirunelveli -> Thoothukudi -> Nagercoil */}
-            <line x1="560" y1="510" x2="510" y2="630" />
-            <line x1="510" y1="630" x2="480" y2="760" />
-            <line x1="480" y1="760" x2="560" y2="750" />
-            <line x1="480" y1="760" x2="450" y2="850" />
+            <line x1="215" y1="238" x2="190" y2="300" />
+            <line x1="190" y1="300" x2="175" y2="365" />
+            <line x1="175" y1="365" x2="210" y2="355" />
+            <line x1="175" y1="365" x2="155" y2="418" />
+          </g>
+
+          {/* Hub Dots — only Chennai Port has a subtle pulse, rest are quiet */}
+          <g>
+            {/* Chennai Port (Main Hub - 4px, subtle slow pulse) */}
+            <circle cx="275" cy="80" r="5.5" fill="none" stroke="#e67e22" strokeWidth="1" opacity="0.4" className="qe-hub-dot" />
+            <circle cx="275" cy="80" r="2.5" fill="#e67e22" opacity="0.7" filter="url(#hubSoftGlow)" />
+
+            {/* Ennore Port (4px, 65% opacity) */}
+            <circle cx="278" cy="62" r="2.5" fill="#e67e22" opacity="0.65" filter="url(#hubSoftGlow)" />
+
+            {/* Thoothukudi Port (4px, 65% opacity) */}
+            <circle cx="210" cy="355" r="2.5" fill="#e67e22" opacity="0.65" filter="url(#hubSoftGlow)" />
+
+            {/* Primary Gateways (Orange, 3px, 50% opacity) */}
+            <circle cx="265" cy="92" r="2" fill="#f39c12" opacity="0.5" />
+            <circle cx="255" cy="115" r="2" fill="#f39c12" opacity="0.5" />
+
+            {/* Industrial Hubs (Blue, 3px, 50% opacity) */}
+            <circle cx="215" cy="105" r="2" fill="#3b82f6" opacity="0.5" />
+            <circle cx="168" cy="115" r="2" fill="#3b82f6" opacity="0.5" />
+            <circle cx="195" cy="175" r="2" fill="#3b82f6" opacity="0.5" />
+            <circle cx="168" cy="205" r="2" fill="#3b82f6" opacity="0.5" />
+            <circle cx="150" cy="218" r="2" fill="#3b82f6" opacity="0.5" />
+            <circle cx="130" cy="228" r="2" fill="#3b82f6" opacity="0.5" />
+
+            {/* Regional Hubs (Teal, 3px, 50% opacity) */}
+            <circle cx="215" cy="238" r="2" fill="#14b8a6" opacity="0.5" />
+            <circle cx="250" cy="245" r="2" fill="#14b8a6" opacity="0.5" />
+            <circle cx="190" cy="300" r="2" fill="#14b8a6" opacity="0.5" />
+            <circle cx="175" cy="365" r="2" fill="#14b8a6" opacity="0.5" />
+            <circle cx="155" cy="418" r="2" fill="#14b8a6" opacity="0.5" />
           </g>
         </svg>
 
-        {/* Layer 3: Hub Dots Layer (Controlled 50% Opacity, No Text Labels) */}
-        <svg 
-          viewBox="0 0 1000 900" 
-          className="absolute w-[100vw] max-w-[1500px] h-[75vh] pointer-events-none opacity-50"
-          style={{ transform: 'translateY(-20px)' }}
-        >
-          {[
-            { cx: 710, cy: 180, delay: '0s' },
-            { cx: 720, cy: 140, delay: '0.2s' },
-            { cx: 685, cy: 200, delay: '0.4s' },
-            { cx: 670, cy: 245, delay: '0.6s' },
-            { cx: 580, cy: 230, delay: '0.8s' },
-            { cx: 480, cy: 260, delay: '1.0s' },
-            { cx: 520, cy: 380, delay: '1.2s' },
-            { cx: 470, cy: 440, delay: '1.4s' },
-            { cx: 420, cy: 460, delay: '1.6s' },
-            { cx: 370, cy: 480, delay: '1.8s' },
-            { cx: 560, cy: 510, delay: '2.0s' },
-            { cx: 640, cy: 520, delay: '2.2s' },
-            { cx: 510, cy: 630, delay: '2.4s' },
-            { cx: 560, cy: 750, delay: '2.6s' },
-            { cx: 480, cy: 760, delay: '2.8s' },
-            { cx: 450, cy: 850, delay: '3.0s' },
-          ].map((hub, idx) => (
-            <g key={idx}>
-              {/* Subtle outer pulse */}
-              <circle
-                cx={hub.cx}
-                cy={hub.cy}
-                r="6"
-                fill="none"
-                stroke="#e67e22"
-                strokeWidth="1"
-                opacity="0.4"
-                className="qe-hub-dot"
-                style={{ animationDelay: hub.delay }}
-              />
-              {/* Center 4px dot */}
-              <circle
-                cx={hub.cx}
-                cy={hub.cy}
-                r="2.5"
-                fill="#e67e22"
-              />
-            </g>
-          ))}
-        </svg>
-
-        {/* Bottom Gradient Fade */}
-        <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#0c1220] to-transparent"></div>
+        {/* Bottom soft gradient fade */}
+        <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-[#0c1220] to-transparent"></div>
       </div>
+
 
 
       {/* ==================================================================== */}

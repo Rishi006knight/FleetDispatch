@@ -50,6 +50,37 @@ body {
   font-family: var(--font-mono);
 }
 
+/* Landing Page Layered Background */
+.landing-page {
+  position: relative;
+  background-color: #0c1220;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.tn-map-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.tn-map-bg svg {
+  width: 60%;
+  max-width: 500px;
+  height: auto;
+  opacity: 0.5;
+  filter: blur(0.5px);
+}
+
+.landing-content {
+  position: relative;
+  z-index: 10;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

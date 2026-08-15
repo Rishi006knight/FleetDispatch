@@ -7,12 +7,12 @@ public class Driver {
     private String name;
     private String phone;
     private String vehicleId;
-    private String vehicleType = "bike"; // bike, car, truck, scooter
+    private String vehicleType = "20ft Multi-Axle Truck"; // 14ft Eicher Container, 20ft Multi-Axle, 32ft Heavy Trailer, 40ft Express Freightliner, Refrigerated Reefer Truck
     private String status = "offline"; // online, offline, busy
-    private Location currentLocation = new Location(19.0760, 72.8777);
-    private double rating = 5.0;
-    private double reliability = 1.0;
-    private double churnRisk = 0.0;
+    private Location currentLocation = new Location(13.0692, 80.1948); // Default Chennai Koyambedu Hub
+    private double rating = 4.9;
+    private double reliability = 0.96;
+    private double churnRisk = 0.04;
     private double earnings = 0.0;
     private int completedDeliveries = 0;
     private double cancellationRate = 0.0;

@@ -66,8 +66,15 @@ public class OrderController {
             }
 
             String priority = (String) body.getOrDefault("priority", "medium");
-            String startWindow = (String) body.getOrDefault("startWindow", "12:00");
-            String endWindow = (String) body.getOrDefault("endWindow", "18:00");
+            String startWindow = (String) body.getOrDefault("startWindow", "08:00");
+            String endWindow = (String) body.getOrDefault("endWindow", "20:00");
+
+            // Warehouse & Storage options
+            String warehouseId = (String) body.getOrDefault("warehouseId", null);
+            String warehouseName = (String) body.getOrDefault("warehouseName", null);
+            int storageDays = body.get("storageDays") != null ? Integer.parseInt(body.get("storageDays").toString()) : 0;
+            String storageType = (String) body.getOrDefault("storageType", "None");
+            boolean requiresHandling = body.get("requiresHandling") != null && Boolean.parseBoolean(body.get("requiresHandling").toString());
 
             Location pickup = new Location(
                     Double.parseDouble(pickupMap.get("lat").toString()),
@@ -81,14 +88,22 @@ public class OrderController {
                     (String) dropMap.getOrDefault("address", "Drop Location")
             );
 
-            // Distance calculation
+            // Calculate Tamil Nadu highway transit distance in km
             double latDiff = drop.getLat() - pickup.getLat();
             double lngDiff = drop.getLng() - pickup.getLng();
-            double distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111.0;
+            double distance = Math.max(8.0, Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111.0);
 
-            // Fetch dynamic pricing & risk from Python ML service
-            int currentHour = LocalTime.now().getHour();
-            double price = mlServiceClient.predictPrice(distance, priority, packageType, "clear", "normal", currentHour);
+            // Compute Commercial Heavy Freight & Warehouse Billing Estimates
+            double freightBase = Math.round((850.0 + distance * 45.0) * 100.0) / 100.0;
+            double weightSurcharge = Math.round((packageWeight * 180.0) * 100.0) / 100.0;
+            double dailyStorageRate = "Cold Storage".equalsIgnoreCase(storageType) ? 450.0 : 250.0;
+            double storageFee = Math.round((storageDays * packageWeight * dailyStorageRate) * 100.0) / 100.0;
+            double handlingFee = requiresHandling ? 1250.0 : 0.0;
+            double tollSurcharge = Math.round((distance * 3.5) * 100.0) / 100.0;
+
+            BillingDetails billing = new BillingDetails(freightBase, weightSurcharge, storageFee, handlingFee, tollSurcharge);
+            billing.setNotes("Commercial Freight Quote for Tamil Nadu Corridor (" + Math.round(distance) + " km)");
+
             RiskScore riskScore = mlServiceClient.predictRisk(distance, priority, packageWeight, 5.0, 1.0, "clear");
 
             String orderId = "ORD-" + (int) (100000 + Math.random() * 900000);
@@ -96,26 +111,97 @@ public class OrderController {
             Order order = new Order();
             order.setOrderId(orderId);
             order.setCustomerName(customerName);
-            order.setCustomerPhone(customerPhone != null ? customerPhone : "9988776655");
+            order.setCustomerPhone(customerPhone != null ? customerPhone : "9840123456");
             order.setPickup(pickup);
             order.setDrop(drop);
-            order.setPackageInfo(new PackageInfo(packageWeight, packageType != null ? packageType : "standard"));
+            order.setPackageInfo(new PackageInfo(packageWeight, packageType != null ? packageType : "Machinery & Cargo"));
             order.setPriority(priority);
             order.setDeliveryWindow(new DeliveryWindow(startWindow, endWindow));
-            order.setPrice(price);
-            order.setStatus("pending");
+            order.setPrice(billing.getTotalAmount());
+            order.setStatus("pending_quote");
+            order.setWarehouseId(warehouseId);
+            order.setWarehouseName(warehouseName);
+            order.setStorageDays(storageDays);
+            order.setStorageType(storageType);
+            order.setRequiresHandling(requiresHandling);
+            order.setQuotationStatus("pending_quote");
+            order.setBillingDetails(billing);
             order.setRiskScore(riskScore);
-            order.setEta(Math.round(distance * 2.5 + 5.0));
+            order.setEta(Math.round(distance * 1.8 + 15.0)); // Commercial truck transit duration
             order.setRouteCoordinates(new ArrayList<>(Arrays.asList(pickup, drop)));
 
             Order savedOrder = orderRepository.save(order);
 
-            // Broadcast real-time event
+            // Broadcast real-time event to Dispatcher
             socketIOService.emit("ORDER_CREATED", savedOrder);
+            socketIOService.emit("QUOTE_REQUESTED", savedOrder);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(savedOrder);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Dispatcher presents finalized quotation bill to customer
+    @PostMapping("/{orderId}/present-bill")
+    public ResponseEntity<?> presentBillToCustomer(@PathVariable String orderId, @RequestBody Map<String, Object> body) {
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+        if (orderOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Order not found."));
+        }
+
+        Order order = orderOpt.get();
+
+        double freightBase = body.get("freightBase") != null ? Double.parseDouble(body.get("freightBase").toString()) : order.getBillingDetails().getFreightBase();
+        double weightSurcharge = body.get("weightSurcharge") != null ? Double.parseDouble(body.get("weightSurcharge").toString()) : order.getBillingDetails().getWeightSurcharge();
+        double storageFee = body.get("storageFee") != null ? Double.parseDouble(body.get("storageFee").toString()) : order.getBillingDetails().getStorageFee();
+        double handlingFee = body.get("handlingFee") != null ? Double.parseDouble(body.get("handlingFee").toString()) : order.getBillingDetails().getHandlingFee();
+        double tollSurcharge = body.get("tollSurcharge") != null ? Double.parseDouble(body.get("tollSurcharge").toString()) : order.getBillingDetails().getTollSurcharge();
+        String notes = (String) body.getOrDefault("notes", "Official B2B Freight & Warehouse Storage Quotation");
+
+        BillingDetails finalBilling = new BillingDetails(freightBase, weightSurcharge, storageFee, handlingFee, tollSurcharge);
+        finalBilling.setNotes(notes);
+
+        order.setBillingDetails(finalBilling);
+        order.setPrice(finalBilling.getTotalAmount());
+        order.setStatus("quoted");
+        order.setQuotationStatus("quoted");
+
+        Order saved = orderRepository.save(order);
+
+        // Broadcast to Customer & Admin
+        socketIOService.emit("BILL_QUOTED", saved);
+        socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+
+        return ResponseEntity.ok(saved);
+    }
+
+    // Customer accepts or rejects quotation
+    @PostMapping("/{orderId}/customer-decision")
+    public ResponseEntity<?> customerDecision(@PathVariable String orderId, @RequestBody Map<String, String> body) {
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+        if (orderOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Order not found."));
+        }
+
+        Order order = orderOpt.get();
+        String decision = body.get("decision"); // "accept" or "reject"
+        String reason = body.getOrDefault("reason", "Customer review");
+
+        if ("accept".equalsIgnoreCase(decision)) {
+            order.setStatus("confirmed");
+            order.setQuotationStatus("accepted");
+            Order saved = orderRepository.save(order);
+            socketIOService.emit("BILL_ACCEPTED", saved);
+            socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Quotation accepted by customer. Ready for Heavy Truck dispatch!", "order", saved));
+        } else {
+            order.setStatus("rejected");
+            order.setQuotationStatus("rejected");
+            Order saved = orderRepository.save(order);
+            socketIOService.emit("BILL_REJECTED", saved);
+            socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Quotation declined by customer.", "order", saved));
         }
     }
 
@@ -130,7 +216,7 @@ public class OrderController {
         Order order = orderOpt.get();
         List<Driver> onlineDrivers = driverRepository.findByStatus("online");
         if (onlineDrivers.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "No online drivers available."));
+            return ResponseEntity.badRequest().body(Map.of("error", "No online heavy trucks available in Tamil Nadu fleet."));
         }
 
         List<Map<String, Object>> scoredDrivers = new ArrayList<>();
@@ -139,10 +225,10 @@ public class OrderController {
             double lngDiff = order.getPickup().getLng() - driver.getCurrentLocation().getLng();
             double distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111.0;
 
-            double eta = distance * 2.0 + 3.0;
+            double eta = distance * 1.6 + 10.0;
 
-            double proximityScore = Math.max(0.0, 100.0 - distance * 10.0);
-            double etaScore = Math.max(0.0, 100.0 - eta * 5.0);
+            double proximityScore = Math.max(0.0, 100.0 - distance * 5.0);
+            double etaScore = Math.max(0.0, 100.0 - eta * 3.0);
             double reliabilityScore = driver.getReliability() * 100.0;
             double ratingScore = (driver.getRating() / 5.0) * 100.0;
             double churnPenalty = (1.0 - driver.getChurnRisk()) * 100.0;
@@ -182,7 +268,7 @@ public class OrderController {
         Optional<Driver> driverOpt = driverRepository.findByDriverId(driverId);
 
         if (orderOpt.isEmpty() || driverOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Order or Driver not found."));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Order or Heavy Truck Driver not found."));
         }
 
         Order order = orderOpt.get();
@@ -309,7 +395,7 @@ public class OrderController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Proof of Delivery verified.");
+            response.put("message", "Cargo Proof of Delivery verified successfully.");
             response.put("order", order);
             return ResponseEntity.ok(response);
         } else {
@@ -322,7 +408,7 @@ public class OrderController {
                     order.getDriverId(),
                     "fraud_pod",
                     "high",
-                    "Suspicious Delivery Proof Rejected: " + reason + " (Confidence Score: " + Math.round(score * 100) + "%)"
+                    "Cargo Proof of Delivery Mismatch: " + reason + " (Confidence Score: " + Math.round(score * 100) + "%)"
             );
             incidentRepository.save(incident);
 

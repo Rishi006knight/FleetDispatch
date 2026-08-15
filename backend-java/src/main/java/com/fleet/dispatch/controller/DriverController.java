@@ -11,6 +11,7 @@ import com.fleet.dispatch.repository.OrderRepository;
 import com.fleet.dispatch.repository.TelemetryRepository;
 import com.fleet.dispatch.service.MLServiceClient;
 import com.fleet.dispatch.websocket.SocketIOService;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,82 @@ public class DriverController {
     @Autowired
     private SocketIOService socketIOService;
 
+    @PostConstruct
+    public void seedInitialTamilNaduTruckFleet() {
+        if (driverRepository.count() == 0) {
+            // Seed Tamil Nadu Heavy Commercial Fleet
+            Driver d1 = new Driver();
+            d1.setDriverId("TRK-101");
+            d1.setName("Murugan (Express Freightliner)");
+            d1.setPhone("9840112233");
+            d1.setVehicleId("TN-01-TR-8841");
+            d1.setVehicleType("32ft Heavy Trailer");
+            d1.setStatus("online");
+            d1.setCurrentLocation(new Location(13.0844, 80.2936, "Chennai Port Container Terminal"));
+            d1.setRating(4.92);
+            d1.setReliability(0.98);
+            d1.setEarnings(48500.0);
+            d1.setCompletedDeliveries(64);
+            driverRepository.save(d1);
+
+            Driver d2 = new Driver();
+            d2.setDriverId("TRK-102");
+            d2.setName("Senthil Kumar (Reefer Cold Fleet)");
+            d2.setPhone("9840223344");
+            d2.setVehicleId("TN-38-CT-9022");
+            d2.setVehicleType("Refrigerated Reefer Truck");
+            d2.setStatus("online");
+            d2.setCurrentLocation(new Location(11.0168, 76.9558, "Coimbatore Logistics Hub"));
+            d2.setRating(4.88);
+            d2.setReliability(0.95);
+            d2.setEarnings(36200.0);
+            d2.setCompletedDeliveries(42);
+            driverRepository.save(d2);
+
+            Driver d3 = new Driver();
+            d3.setDriverId("TRK-103");
+            d3.setName("Arumugam (Multi-Axle Heavy)");
+            d3.setPhone("9840334455");
+            d3.setVehicleId("TN-58-MD-4410");
+            d3.setVehicleType("20ft Multi-Axle Truck");
+            d3.setStatus("online");
+            d3.setCurrentLocation(new Location(9.9252, 78.1198, "Madurai Ring Road Hub"));
+            d3.setRating(4.95);
+            d3.setReliability(0.97);
+            d3.setEarnings(52000.0);
+            d3.setCompletedDeliveries(58);
+            driverRepository.save(d3);
+
+            Driver d4 = new Driver();
+            d4.setDriverId("TRK-104");
+            d4.setName("Karthik Raja (Container Express)");
+            d4.setPhone("9840445566");
+            d4.setVehicleId("TN-27-SL-1102");
+            d4.setVehicleType("14ft Eicher Container");
+            d4.setStatus("online");
+            d4.setCurrentLocation(new Location(11.6643, 78.1460, "Salem Steel Plant Road Hub"));
+            d4.setRating(4.85);
+            d4.setReliability(0.94);
+            d4.setEarnings(29400.0);
+            d4.setCompletedDeliveries(38);
+            driverRepository.save(d4);
+
+            Driver d5 = new Driver();
+            d5.setDriverId("TRK-105");
+            d5.setName("Velu Pandian (Port Freightliner)");
+            d5.setPhone("9840556677");
+            d5.setVehicleId("TN-69-TT-7733");
+            d5.setVehicleType("40ft Container Freightliner");
+            d5.setStatus("online");
+            d5.setCurrentLocation(new Location(8.7642, 78.1348, "Thoothukudi Port Terminal"));
+            d5.setRating(4.90);
+            d5.setReliability(0.96);
+            d5.setEarnings(61000.0);
+            d5.setCompletedDeliveries(72);
+            driverRepository.save(d5);
+        }
+    }
+
     @PostMapping
     public ResponseEntity<?> registerDriver(@RequestBody Map<String, Object> body) {
         String name = (String) body.get("name");
@@ -51,11 +128,11 @@ public class DriverController {
             return ResponseEntity.badRequest().body(Map.of("error", "Missing required driver fields."));
         }
 
-        String vehicleType = (String) body.getOrDefault("vehicleType", "bike");
-        double initialLat = body.get("initialLat") != null ? Double.parseDouble(body.get("initialLat").toString()) : 19.0760;
-        double initialLng = body.get("initialLng") != null ? Double.parseDouble(body.get("initialLng").toString()) : 72.8777;
+        String vehicleType = (String) body.getOrDefault("vehicleType", "20ft Multi-Axle Truck");
+        double initialLat = body.get("initialLat") != null ? Double.parseDouble(body.get("initialLat").toString()) : 13.0692;
+        double initialLng = body.get("initialLng") != null ? Double.parseDouble(body.get("initialLng").toString()) : 80.1948;
 
-        String driverId = "DRV-" + (int)(100 + Math.random() * 900);
+        String driverId = "TRK-" + (int)(100 + Math.random() * 900);
 
         Driver driver = new Driver();
         driver.setDriverId(driverId);
@@ -125,7 +202,7 @@ public class DriverController {
         telemetryPayload.put("activeOrderId", activeOrderId);
         socketIOService.emit("TELEMETRY_UPDATED", telemetryPayload);
 
-        // If driver is busy delivering, check for route deviations via Python ML
+        // If truck is busy delivering, check for route deviations via Python ML
         if (activeOrderId != null) {
             Optional<Order> orderOpt = orderRepository.findByOrderId(activeOrderId);
             if (orderOpt.isPresent() && "out_for_delivery".equalsIgnoreCase(orderOpt.get().getStatus())) {
@@ -142,7 +219,7 @@ public class DriverController {
                                 driverId,
                                 "route_deviation",
                                 "medium",
-                                "Route Deviation Detected: Driver is " + Math.round(distMeters) + " meters off the optimized path!"
+                                "Highway Route Deviation: Heavy Truck " + driver.getVehicleId() + " is " + Math.round(distMeters) + "m off designated freight corridor!"
                         );
                         incidentRepository.save(inc);
                         socketIOService.emit("INCIDENT_CREATED", inc);
@@ -166,7 +243,7 @@ public class DriverController {
                             driverId,
                             "delay",
                             "medium",
-                            "High Churn Risk: Driver " + driver.getName() + " has a " + Math.round(driver.getChurnRisk() * 100) + "% chance of leaving the platform within 30 days. Recommend retention bonus."
+                            "Fleet Retention Alert: Heavy Truck Driver " + driver.getName() + " (" + driver.getVehicleId() + ") churn probability is " + Math.round(driver.getChurnRisk() * 100) + "%."
                     );
                     incidentRepository.save(churnIncident);
                     socketIOService.emit("INCIDENT_CREATED", churnIncident);

@@ -18,7 +18,19 @@ public class Order {
     private String priority = "medium";
     private DeliveryWindow deliveryWindow = new DeliveryWindow();
     private double price;
-    private String status = "pending"; // pending, assigned, picked_up, out_for_delivery, completed, failed
+    private String status = "pending_quote"; // pending_quote, quoted, confirmed, assigned, picked_up, out_for_delivery, completed, rejected
+
+    // Warehouse & Storage Service options
+    private String warehouseId;
+    private String warehouseName;
+    private int storageDays = 0;
+    private String storageType = "None"; // None, Ambient, Cold Storage, Pallet Staging, Bonded Yard, Cross-Docking
+    private boolean requiresHandling = false;
+
+    // Quotation & Billing Details
+    private String quotationStatus = "pending_quote"; // pending_quote, quoted, accepted, rejected
+    private BillingDetails billingDetails;
+
     private String driverId;
     private List<Location> routeCoordinates = new ArrayList<>();
     private double eta = 0.0;
@@ -108,6 +120,62 @@ public class Order {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public void setWarehouseId(String warehouseId) {
+        this.warehouseId = warehouseId;
+    }
+
+    public String getWarehouseName() {
+        return warehouseName;
+    }
+
+    public void setWarehouseName(String warehouseName) {
+        this.warehouseName = warehouseName;
+    }
+
+    public int getStorageDays() {
+        return storageDays;
+    }
+
+    public void setStorageDays(int storageDays) {
+        this.storageDays = storageDays;
+    }
+
+    public String getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(String storageType) {
+        this.storageType = storageType;
+    }
+
+    public boolean isRequiresHandling() {
+        return requiresHandling;
+    }
+
+    public void setRequiresHandling(boolean requiresHandling) {
+        this.requiresHandling = requiresHandling;
+    }
+
+    public String getQuotationStatus() {
+        return quotationStatus;
+    }
+
+    public void setQuotationStatus(String quotationStatus) {
+        this.quotationStatus = quotationStatus;
+    }
+
+    public BillingDetails getBillingDetails() {
+        return billingDetails;
+    }
+
+    public void setBillingDetails(BillingDetails billingDetails) {
+        this.billingDetails = billingDetails;
     }
 
     public String getDriverId() {

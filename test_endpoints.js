@@ -3,73 +3,79 @@ const axios = require('axios');
 const BACKEND_URL = 'http://localhost:5000/api';
 
 async function runTests() {
-  console.log('=== QuantumExpress Operational API Verification ===\n');
+  console.log('=== Tamil Nadu Freight & Warehouse Management System: API Verification ===\n');
 
   try {
     // 1. Check health
-    console.log('[1] Checking backend server health...');
+    console.log('[1] Checking Java backend server health...');
     const health = await axios.get('http://localhost:5000/health');
     console.log(`    Status: ${health.data.status}`);
     console.log(`    Database State: ${health.data.database}`);
+    console.log(`    System: ${health.data.system}`);
     console.log('    ✓ Health check passed!\n');
 
-    // 2. Register Driver A
-    console.log('[2] Registering Driver A (Rohan)...');
-    const driverA = await axios.post(`${BACKEND_URL}/drivers`, {
-      name: 'Rohan Sharma',
-      phone: '9876543211',
-      vehicleId: 'MH-12-EX-4921',
-      vehicleType: 'bike',
-      initialLat: 19.0760,
-      initialLng: 72.8777
+    // 2. Fetch seed heavy truck drivers
+    console.log('[2] Fetching initial Tamil Nadu commercial heavy truck fleet...');
+    const driversRes = await axios.get(`${BACKEND_URL}/drivers`);
+    console.log(`    ✓ Active Heavy Trucks: ${driversRes.data.length} vehicles stationed across TN Hubs.`);
+    driversRes.data.slice(0, 3).forEach(d => {
+      console.log(`      - ${d.name} (${d.vehicleId}) | ${d.vehicleType} | Rating: ${d.rating} ★`);
     });
-    const driverIdA = driverA.data.driverId;
-    console.log(`    ✓ Registered! ID: ${driverIdA}`);
-    
-    // Register Driver B
-    console.log('[3] Registering Driver B (Amit)...');
-    const driverB = await axios.post(`${BACKEND_URL}/drivers`, {
-      name: 'Amit Kumar',
-      phone: '9876543212',
-      vehicleId: 'MH-12-EX-8822',
-      vehicleType: 'car',
-      initialLat: 19.0820,
-      initialLng: 72.8820
-    });
-    const driverIdB = driverB.data.driverId;
-    console.log(`    ✓ Registered! ID: ${driverIdB}\n`);
+    console.log('');
 
-    // 4. Toggle Drivers Online
-    console.log('[4] Activating driver online states...');
-    await axios.put(`${BACKEND_URL}/drivers/${driverIdA}/status`, { status: 'online' });
-    await axios.put(`${BACKEND_URL}/drivers/${driverIdB}/status`, { status: 'online' });
-    console.log('    ✓ Rohan & Amit are now ONLINE.\n');
-
-    // 5. Book a Package Order
-    console.log('[5] Booking package delivery from BKC to Andheri...');
+    // 3. Book B2B Heavy Freight & Warehouse Storage Request (Coimbatore -> Chennai Port)
+    console.log('[3] Shipper books 15 Tonne Machinery Freight from Coimbatore Hub to Chennai Port with 4 Days Cold/Pallet Storage...');
     const order = await axios.post(`${BACKEND_URL}/orders`, {
-      customerName: 'Sanjay Gupta',
-      customerPhone: '9988776655',
-      pickup: { lat: 19.0660, lng: 72.8680, address: 'BKC office, Mumbai' },
-      drop: { lat: 19.1130, lng: 72.8690, address: 'Marol Metro, Andheri East, Mumbai' },
-      packageWeight: 2.3,
-      packageType: 'electronics',
-      priority: 'high'
+      customerName: 'Kovai Industrial Components Ltd',
+      customerPhone: '9840112233',
+      pickup: { lat: 11.0168, lng: 76.9558, address: 'Peelamedu Industrial Logistics Park, Coimbatore' },
+      drop: { lat: 13.0844, lng: 80.2936, address: 'Chennai Port Trust Container Terminal, Rajaji Salai, Chennai' },
+      packageWeight: 15.0,
+      packageType: 'Heavy Machinery & Parts',
+      priority: 'high',
+      warehouseId: 'chennai-port',
+      warehouseName: 'Chennai Port Container Terminal & CFS',
+      storageDays: 4,
+      storageType: 'Pallet Staging',
+      requiresHandling: true
     });
     const orderId = order.data.orderId;
-    console.log(`    ✓ Order Created: ${orderId}`);
-    console.log(`    ✓ Price Calculated: ₹${order.data.price}`);
-    console.log(`    ✓ AI Risk Score: ${Math.round(order.data.riskScore.overall * 100)}%\n`);
+    console.log(`    ✓ Consignment Request Created: ${orderId}`);
+    console.log(`    ✓ Status: ${order.data.status} (Awaiting Dispatcher Official Bill)`);
+    console.log(`    ✓ Preliminary Base Freight: ₹${order.data.billingDetails?.freightBase}`);
+    console.log(`    ✓ Warehouse Storage Fee: ₹${order.data.billingDetails?.storageFee}`);
+    console.log(`    ✓ Total Estimated Bill (with 18% GST): ₹${order.data.price}\n`);
 
-    // 6. Run AI Driver Matching Matrix
-    console.log('[6] Running AI Matcher scoring matrix for the order...');
+    // 4. Dispatcher Presents Finalized Bill to Shipper
+    console.log('[4] Dispatcher reviews cargo, applies special storage handling rates, and presents official Bill...');
+    const quotedRes = await axios.post(`${BACKEND_URL}/orders/${orderId}/present-bill`, {
+      freightBase: 22000.0,
+      weightSurcharge: 2700.0,
+      storageFee: 15000.0,
+      handlingFee: 1250.0,
+      tollSurcharge: 1850.0,
+      notes: 'Express 32ft Heavy Trailer with 4-Day Pallet Staging at Chennai Port CFS'
+    });
+    console.log(`    ✓ Bill Presented to Shipper! Quotation Status: ${quotedRes.data.quotationStatus}`);
+    console.log(`    ✓ Itemized Total: ₹${quotedRes.data.price} (Subtotal + 18% GST)\n`);
+
+    // 5. Shipper Accepts Quotation Bill
+    console.log('[5] Shipper reviews and ACCEPTS the official Freight & Storage Bill...');
+    const acceptRes = await axios.post(`${BACKEND_URL}/orders/${orderId}/customer-decision`, {
+      decision: 'accept'
+    });
+    console.log(`    ✓ Shipper Decision: ACCEPTED`);
+    console.log(`    ✓ Order Status: ${acceptRes.data.order.status} (Ready for Truck Dispatch)\n`);
+
+    // 6. AI Heavy Truck Driver Matching Matrix
+    console.log('[6] Running AI Matcher scoring matrix for Commercial Heavy Trucks...');
     const matches = await axios.post(`${BACKEND_URL}/orders/match`, { orderId });
-    console.log('    Scored Candidates:');
+    console.log('    Top Matched Heavy Trucks:');
     matches.data.matches.forEach((m, idx) => {
-      console.log(`      ${idx + 1}. Driver: ${m.driver.name} | Score: ${m.score}% match | Distance: ${m.distance.toFixed(2)} km | ETA: ${Math.round(m.eta)} mins`);
+      console.log(`      ${idx + 1}. ${m.driver.name} (${m.driver.vehicleId}) | ${m.driver.vehicleType} | Score: ${m.score}% | ETA: ${Math.round(m.eta)} mins`);
     });
     const bestDriverId = matches.data.matches[0].driver.driverId;
-    console.log(`    ✓ Optimal candidate chosen: ${matches.data.matches[0].driver.name} (${bestDriverId})\n`);
+    console.log(`    ✓ Optimal Heavy Truck chosen: ${matches.data.matches[0].driver.name} (${bestDriverId})\n`);
 
     // 7. Dispatch Assignment
     console.log(`[7] Dispatching order to ${matches.data.matches[0].driver.name}...`);
@@ -78,9 +84,9 @@ async function runTests() {
       driverId: bestDriverId
     });
     console.log(`    ✓ Status updated to: ${assigned.data.status}`);
-    console.log(`    ✓ Route generated with ${assigned.data.routeCoordinates.length} waypoints.`);
-    console.log(`    ✓ Travel ETA: ${assigned.data.eta} minutes.`);
-    console.log('\n=== All Operations API Checks Completed Successfully! ===');
+    console.log(`    ✓ Highway Route Generated: ${assigned.data.routeCoordinates.length} waypoints.`);
+    console.log(`    ✓ Estimated Highway Travel Time: ${assigned.data.eta} minutes.`);
+    console.log('\n=== All Tamil Nadu Freight & Warehouse Billing Checks Completed Successfully! ===');
 
   } catch (error) {
     console.error('✗ Test suite execution failed!');

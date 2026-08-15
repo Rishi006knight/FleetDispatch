@@ -17,9 +17,11 @@ env/
 .env.test.local
 .env.production.local
 
-# Next.js Build and Cache
+# Next.js & Backend Build and Cache
 frontend/.next/
 frontend/out/
+backend/dist/
+dist/
 
 # IDE and System Files
 .idea/

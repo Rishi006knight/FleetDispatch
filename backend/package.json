@@ -1,6 +1,7 @@
 {
   "name": "ai-fleet-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Backend API Server for Fleet & Delivery Management",
   "main": "src/server.ts",
   "scripts": {

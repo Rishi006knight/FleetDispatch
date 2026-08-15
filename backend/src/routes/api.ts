@@ -4,7 +4,6 @@ import { OrderController } from '../controllers/OrderController.js';
 import { DriverController } from '../controllers/DriverController.js';
 import { AnalyticsController } from '../controllers/AnalyticsController.js';
 import { IncidentController } from '../controllers/IncidentController.js';
-import Order from '../models/Order.js';
 
 export function setupRoutes(io: SocketServer): Router {
   const router = Router();
@@ -14,39 +13,28 @@ export function setupRoutes(io: SocketServer): Router {
   const analyticsCtrl = new AnalyticsController();
   const incidentCtrl = new IncidentController(io);
 
-  // Orders
+  // Orders Endpoints
+  router.get('/orders', orderCtrl.getOrders);
+  router.get('/orders/:orderId', orderCtrl.getOrderById);
   router.post('/orders', orderCtrl.createOrder);
-  router.post('/orders/match', orderCtrl.matchDriver);
-  router.post('/orders/assign', orderCtrl.assignDriver);
+  router.put('/orders/:orderId/quote-bill', orderCtrl.quoteBill);
+  router.put('/orders/:orderId/accept-bill', orderCtrl.acceptBill);
+  router.put('/orders/:orderId/reject-bill', orderCtrl.rejectBill);
+  router.post('/orders/:orderId/request-dispatch', orderCtrl.requestDispatch);
+  router.put('/orders/:orderId/complete', orderCtrl.completeOrder);
   router.put('/orders/:orderId/status', orderCtrl.updateStatus);
-  router.post('/orders/:orderId/verify-pod', orderCtrl.verifyPOD);
-  
-  router.get('/orders', async (req, res) => {
-    try {
-      const orders = await Order.find().sort({ createdAt: -1 });
-      res.json(orders);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
-    }
-  });
+  router.post('/orders/match', orderCtrl.matchDriver);
 
-  router.get('/orders/:orderId', async (req, res) => {
-    try {
-      const order = await Order.findOne({ orderId: req.params.orderId });
-      if (!order) return res.status(404).json({ error: 'Order not found.' });
-      res.json(order);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
-    }
-  });
+  // Driver Dispatch Response
+  router.post('/drivers/dispatch-response', orderCtrl.handleDispatchResponse);
 
-  // Drivers
+  // Drivers Endpoints
   router.post('/drivers', driverCtrl.registerDriver);
   router.get('/drivers', driverCtrl.getDrivers);
   router.put('/drivers/:driverId/status', driverCtrl.toggleStatus);
   router.post('/drivers/:driverId/telemetry', driverCtrl.updateLocation);
 
-  // Analytics & Simulations
+  // Analytics
   router.get('/analytics', analyticsCtrl.getAnalytics);
   router.post('/analytics/simulate', analyticsCtrl.runSimulation);
 

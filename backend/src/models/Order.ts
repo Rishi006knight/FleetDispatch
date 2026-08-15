@@ -4,6 +4,7 @@ export interface IOrder extends Document {
   orderId: string;
   customerName: string;
   customerPhone: string;
+  businessCode: string;
   pickup: {
     lat: number;
     lng: number;
@@ -14,18 +15,54 @@ export interface IOrder extends Document {
     lng: number;
     address: string;
   };
-  package: {
+  packageDetails?: {
+    weight: number;
+    type: string;
+    priority?: string;
+  };
+  package?: {
     weight: number;
     type: string;
   };
+  warehouseServices?: {
+    facilityId?: string;
+    storageType?: string;
+    days?: number;
+    handlingRequired?: boolean;
+  };
   priority: 'low' | 'medium' | 'high';
-  deliveryWindow: {
+  deliveryWindow?: {
     start: string;
     end: string;
   };
   price: number;
-  status: 'pending' | 'assigned' | 'picked_up' | 'out_for_delivery' | 'completed' | 'failed';
+  totalBillAmount?: number;
+  itemizedBill?: {
+    freightBase?: number;
+    storageFee?: number;
+    handlingFee?: number;
+    tollSurcharge?: number;
+    notes?: string;
+  };
+  status: 
+    | 'quote_requested'
+    | 'bill_presented'
+    | 'bill_accepted'
+    | 'bill_rejected'
+    | 'ready_for_dispatch'
+    | 'dispatch_requested'
+    | 'driver_assigned'
+    | 'assigned'
+    | 'pickup_arrived'
+    | 'in_transit'
+    | 'out_for_delivery'
+    | 'completed'
+    | 'failed'
+    | 'rejected';
   driverId: string | null;
+  dispatchRequestedDriverId?: string | null;
+  driverName?: string | null;
+  vehicleId?: string | null;
   routeCoordinates: Array<{ lat: number; lng: number }>;
   eta: number; // in minutes
   riskScore: {
@@ -35,6 +72,7 @@ export interface IOrder extends Document {
     overall: number;
   };
   podPhotoUrl: string | null;
+  podNotes?: string | null;
   podStatus: 'pending' | 'verified' | 'rejected' | null;
   createdAt: Date;
   updatedAt: Date;
@@ -43,7 +81,8 @@ export interface IOrder extends Document {
 const OrderSchema: Schema = new Schema({
   orderId: { type: String, required: true, unique: true },
   customerName: { type: String, required: true },
-  customerPhone: { type: String, required: true },
+  customerPhone: { type: String, default: '9840123456' },
+  businessCode: { type: String, default: 'ABC123', index: true },
   pickup: {
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
@@ -54,34 +93,72 @@ const OrderSchema: Schema = new Schema({
     lng: { type: Number, required: true },
     address: { type: String, required: true }
   },
+  packageDetails: {
+    weight: { type: Number, default: 12000 },
+    type: { type: String, default: 'Heavy Machinery & Parts' },
+    priority: { type: String, default: 'medium' }
+  },
   package: {
-    weight: { type: Number, required: true },
-    type: { type: String, required: true }
+    weight: { type: Number, default: 12000 },
+    type: { type: String, default: 'Heavy Machinery & Parts' }
+  },
+  warehouseServices: {
+    facilityId: { type: String, default: 'chennai-port' },
+    storageType: { type: String, default: 'None' },
+    days: { type: Number, default: 0 },
+    handlingRequired: { type: Boolean, default: false }
   },
   priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
   deliveryWindow: {
-    start: { type: String, required: true },
-    end: { type: String, required: true }
+    start: { type: String, default: '08:00' },
+    end: { type: String, default: '20:00' }
   },
-  price: { type: Number, required: true },
+  price: { type: Number, default: 24500 },
+  totalBillAmount: { type: Number, default: 24500 },
+  itemizedBill: {
+    freightBase: { type: Number, default: 18500 },
+    storageFee: { type: Number, default: 0 },
+    handlingFee: { type: Number, default: 0 },
+    tollSurcharge: { type: Number, default: 2400 },
+    notes: { type: String, default: '' }
+  },
   status: { 
     type: String, 
-    enum: ['pending', 'assigned', 'picked_up', 'out_for_delivery', 'completed', 'failed'], 
-    default: 'pending' 
+    enum: [
+      'quote_requested', 
+      'bill_presented', 
+      'bill_accepted', 
+      'bill_rejected', 
+      'ready_for_dispatch', 
+      'dispatch_requested', 
+      'driver_assigned', 
+      'assigned', 
+      'pickup_arrived', 
+      'in_transit', 
+      'out_for_delivery', 
+      'completed', 
+      'failed', 
+      'rejected'
+    ], 
+    default: 'quote_requested' 
   },
   driverId: { type: String, default: null },
+  dispatchRequestedDriverId: { type: String, default: null },
+  driverName: { type: String, default: null },
+  vehicleId: { type: String, default: null },
   routeCoordinates: [{
     lat: { type: Number },
     lng: { type: Number }
   }],
-  eta: { type: Number, default: 0 },
+  eta: { type: Number, default: 180 },
   riskScore: {
-    delayProb: { type: Number, default: 0 },
-    theftProb: { type: Number, default: 0 },
-    failedProb: { type: Number, default: 0 },
-    overall: { type: Number, default: 0 }
+    delayProb: { type: Number, default: 0.05 },
+    theftProb: { type: Number, default: 0.02 },
+    failedProb: { type: Number, default: 0.01 },
+    overall: { type: Number, default: 0.03 }
   },
   podPhotoUrl: { type: String, default: null },
+  podNotes: { type: String, default: null },
   podStatus: { type: String, enum: ['pending', 'verified', 'rejected', null], default: null }
 }, {
   timestamps: true

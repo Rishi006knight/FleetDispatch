@@ -5,12 +5,14 @@ export interface IDriver extends Document {
   name: string;
   phone: string;
   vehicleId: string;
-  vehicleType: 'bike' | 'car' | 'truck' | 'scooter';
-  status: 'online' | 'offline' | 'busy';
+  vehicleType: string;
+  status: 'online' | 'offline' | 'busy' | 'in_transit';
   currentLocation: {
     lat: number;
     lng: number;
   };
+  stationHub?: string;
+  rtoCode?: string;
   rating: number;
   reliability: number;
   churnRisk: number;
@@ -25,18 +27,20 @@ const DriverSchema: Schema = new Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true },
   vehicleId: { type: String, required: true },
-  vehicleType: { type: String, enum: ['bike', 'car', 'truck', 'scooter'], default: 'bike' },
-  status: { type: String, enum: ['online', 'offline', 'busy'], default: 'offline' },
+  vehicleType: { type: String, default: '32ft Heavy Trailer' },
+  status: { type: String, enum: ['online', 'offline', 'busy', 'in_transit'], default: 'online' },
   currentLocation: {
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true }
+    lat: { type: Number, required: true, default: 13.0844 },
+    lng: { type: Number, required: true, default: 80.2936 }
   },
-  rating: { type: Number, default: 5.0 },
-  reliability: { type: Number, default: 1.0 },
-  churnRisk: { type: Number, default: 0.0 },
-  earnings: { type: Number, default: 0 },
-  completedDeliveries: { type: Number, default: 0 },
-  cancellationRate: { type: Number, default: 0.0 }
+  stationHub: { type: String, default: 'Chennai Port CFS' },
+  rtoCode: { type: String, default: '01' },
+  rating: { type: Number, default: 4.92 },
+  reliability: { type: Number, default: 0.98 },
+  churnRisk: { type: Number, default: 0.02 },
+  earnings: { type: Number, default: 48500 },
+  completedDeliveries: { type: Number, default: 64 },
+  cancellationRate: { type: Number, default: 0.01 }
 }, {
   timestamps: true
 });

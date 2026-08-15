@@ -144,36 +144,19 @@ export default function LandingLoginPage() {
     <div className="relative min-h-screen w-full bg-[#0c1220] text-white flex flex-col justify-between overflow-x-hidden select-none">
       
       {/* ==================================================================== */}
-      {/* BACKGROUND: Stylized Animated Tamil Nadu Logistics Network Map        */}
+      {/* BACKGROUND: 3-Layer Subtle Atmospheric Logistics Network              */}
       {/* ==================================================================== */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
         
-        {/* Soft Radial Ambient Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] h-[800px] bg-gradient-to-tr from-amber-500/10 via-blue-900/10 to-transparent rounded-full blur-3xl opacity-60"></div>
+        {/* Layer 1: Soft Ambient Radial Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[650px] bg-gradient-to-tr from-amber-500/5 via-blue-900/10 to-transparent rounded-full blur-3xl opacity-40"></div>
         
-        {/* SVG Map of Tamil Nadu & Logistics Corridors */}
+        {/* Layer 2: Network Lines & State Contour (Very Faint Watermark: 8% Opacity) */}
         <svg 
           viewBox="0 0 1000 900" 
-          className="w-[100vw] max-w-[1500px] h-[75vh] opacity-40 transition-opacity duration-1000"
+          className="absolute w-[100vw] max-w-[1500px] h-[75vh] opacity-[0.08] blur-[1px] pointer-events-none"
           style={{ transform: 'translateY(-20px)' }}
         >
-          <defs>
-            {/* Ambient Line Gradient */}
-            <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#e67e22" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#f39c12" stopOpacity="0.15" />
-            </linearGradient>
-            
-            {/* Glowing Hub Filter */}
-            <filter id="hubGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
           {/* Stylized Tamil Nadu State Contour */}
           <path
             d="M 680 120 
@@ -188,14 +171,14 @@ export default function LandingLoginPage() {
                Q 300 400 350 320 
                Q 400 240 480 180 
                Q 560 130 680 120 Z"
-            fill="rgba(26, 39, 68, 0.25)"
-            stroke="#1a2744"
-            strokeWidth="1.5"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="1.2"
             strokeDasharray="4 4"
           />
 
-          {/* Animated Connecting Logistics Corridor Lines */}
-          <g stroke="url(#routeGradient)" strokeWidth="1.5" fill="none">
+          {/* Logistics Corridor Lines */}
+          <g stroke="#e67e22" strokeWidth="1" fill="none">
             {/* Chennai -> Ennore */}
             <line x1="710" y1="180" x2="720" y2="140" />
             {/* Chennai -> Koyambedu -> Tambaram */}
@@ -218,66 +201,60 @@ export default function LandingLoginPage() {
             <line x1="480" y1="760" x2="560" y2="750" />
             <line x1="480" y1="760" x2="450" y2="850" />
           </g>
+        </svg>
 
-          {/* 16 Glowing Logistics Hub Dots with Wave Delays */}
+        {/* Layer 3: Hub Dots Layer (Controlled 50% Opacity, No Text Labels) */}
+        <svg 
+          viewBox="0 0 1000 900" 
+          className="absolute w-[100vw] max-w-[1500px] h-[75vh] pointer-events-none opacity-50"
+          style={{ transform: 'translateY(-20px)' }}
+        >
           {[
-            { name: 'Chennai Port', cx: 710, cy: 180, delay: '0s' },
-            { name: 'Ennore Port', cx: 720, cy: 140, delay: '0.2s' },
-            { name: 'Koyambedu', cx: 685, cy: 200, delay: '0.4s' },
-            { name: 'Tambaram', cx: 670, cy: 245, delay: '0.6s' },
-            { name: 'Vellore', cx: 580, cy: 230, delay: '0.8s' },
-            { name: 'Hosur', cx: 480, cy: 260, delay: '1.0s' },
-            { name: 'Salem', cx: 520, cy: 380, delay: '1.2s' },
-            { name: 'Erode', cx: 470, cy: 440, delay: '1.4s' },
-            { name: 'Tiruppur', cx: 420, cy: 460, delay: '1.6s' },
-            { name: 'Coimbatore', cx: 370, cy: 480, delay: '1.8s' },
-            { name: 'Trichy', cx: 560, cy: 510, delay: '2.0s' },
-            { name: 'Thanjavur', cx: 640, cy: 520, delay: '2.2s' },
-            { name: 'Madurai', cx: 510, cy: 630, delay: '2.4s' },
-            { name: 'Thoothukudi', cx: 560, cy: 750, delay: '2.6s' },
-            { name: 'Tirunelveli', cx: 480, cy: 760, delay: '2.8s' },
-            { name: 'Nagercoil', cx: 450, cy: 850, delay: '3.0s' },
+            { cx: 710, cy: 180, delay: '0s' },
+            { cx: 720, cy: 140, delay: '0.2s' },
+            { cx: 685, cy: 200, delay: '0.4s' },
+            { cx: 670, cy: 245, delay: '0.6s' },
+            { cx: 580, cy: 230, delay: '0.8s' },
+            { cx: 480, cy: 260, delay: '1.0s' },
+            { cx: 520, cy: 380, delay: '1.2s' },
+            { cx: 470, cy: 440, delay: '1.4s' },
+            { cx: 420, cy: 460, delay: '1.6s' },
+            { cx: 370, cy: 480, delay: '1.8s' },
+            { cx: 560, cy: 510, delay: '2.0s' },
+            { cx: 640, cy: 520, delay: '2.2s' },
+            { cx: 510, cy: 630, delay: '2.4s' },
+            { cx: 560, cy: 750, delay: '2.6s' },
+            { cx: 480, cy: 760, delay: '2.8s' },
+            { cx: 450, cy: 850, delay: '3.0s' },
           ].map((hub, idx) => (
             <g key={idx}>
-              {/* Outer Pulse Ring */}
+              {/* Subtle outer pulse */}
               <circle
                 cx={hub.cx}
                 cy={hub.cy}
-                r="10"
+                r="6"
                 fill="none"
                 stroke="#e67e22"
-                strokeWidth="1.5"
-                opacity="0.6"
+                strokeWidth="1"
+                opacity="0.4"
                 className="qe-hub-dot"
                 style={{ animationDelay: hub.delay }}
               />
-              {/* Center Dot */}
+              {/* Center 4px dot */}
               <circle
                 cx={hub.cx}
                 cy={hub.cy}
-                r="4"
-                fill="#f39c12"
-                filter="url(#hubGlow)"
+                r="2.5"
+                fill="#e67e22"
               />
-              {/* Label */}
-              <text
-                x={hub.cx + 8}
-                y={hub.cy + 3}
-                fill="#9ca3af"
-                fontSize="10"
-                fontFamily="Inter, sans-serif"
-                fontWeight="500"
-                opacity="0.8"
-              >
-                {hub.name}
-              </text>
             </g>
           ))}
         </svg>
 
-        {/* Bottom soft gradient fade */}
+        {/* Bottom Gradient Fade */}
         <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#0c1220] to-transparent"></div>
       </div>
+
 
       {/* ==================================================================== */}
       {/* TOP BAR: Fixed Header                                                */}

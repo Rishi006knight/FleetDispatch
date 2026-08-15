@@ -186,7 +186,6 @@ public class OrderController {
 
         Order order = orderOpt.get();
         String decision = body.get("decision"); // "accept" or "reject"
-        String reason = body.getOrDefault("reason", "Customer review");
 
         if ("accept".equalsIgnoreCase(decision)) {
             order.setStatus("confirmed");
@@ -202,6 +201,97 @@ public class OrderController {
             socketIOService.emit("BILL_REJECTED", saved);
             socketIOService.emit("ORDER_STATUS_UPDATED", saved);
             return ResponseEntity.ok(Map.of("success", true, "message", "Quotation declined by customer.", "order", saved));
+        }
+    }
+
+    // Dispatcher sends request to respective driver of source origin hub
+    @PostMapping("/{orderId}/send-dispatch-request")
+    public ResponseEntity<?> sendDispatchRequestToDriver(@PathVariable String orderId, @RequestBody Map<String, String> body) {
+        String driverId = body.get("driverId");
+
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+        Optional<Driver> driverOpt = driverRepository.findByDriverId(driverId);
+
+        if (orderOpt.isEmpty() || driverOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Order or Heavy Truck Driver not found."));
+        }
+
+        Order order = orderOpt.get();
+        Driver driver = driverOpt.get();
+
+        order.setStatus("dispatch_requested");
+        order.setDispatchStatus("requested");
+        order.setDispatchRequestedDriverId(driverId);
+        order.setDispatchRequestedDriverName(driver.getName());
+
+        Order saved = orderRepository.save(order);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("order", saved);
+        payload.put("driver", driver);
+
+        // Alert specific driver and update status across all portals
+        socketIOService.emit("ORDER_DISPATCH_REQUEST", payload);
+        socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+
+        return ResponseEntity.ok(Map.of("success", true, "message", "Dispatch request sent to source heavy truck driver " + driver.getName(), "order", saved));
+    }
+
+    // Driver responds to dispatch request (Accepts or Declines)
+    @PostMapping("/{orderId}/driver-response")
+    public ResponseEntity<?> driverResponseToDispatch(@PathVariable String orderId, @RequestBody Map<String, String> body) {
+        String driverId = body.get("driverId");
+        String decision = body.get("decision"); // "accept" or "decline"
+
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+        Optional<Driver> driverOpt = driverRepository.findByDriverId(driverId);
+
+        if (orderOpt.isEmpty() || driverOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Order or Driver not found."));
+        }
+
+        Order order = orderOpt.get();
+        Driver driver = driverOpt.get();
+
+        if ("accept".equalsIgnoreCase(decision)) {
+            driver.setStatus("busy");
+            driverRepository.save(driver);
+
+            // Calculate route waypoints from Driver -> Pickup -> Drop
+            Map<String, Object> routeResult = mlServiceClient.optimizeRoute(driver.getCurrentLocation(), order.getPickup(), order.getDrop());
+            List<Location> route = (List<Location>) routeResult.get("route");
+            Double eta = (Double) routeResult.get("total_eta_minutes");
+
+            order.setDriverId(driverId);
+            order.setStatus("assigned");
+            order.setDispatchStatus("accepted");
+            order.setRouteCoordinates(route != null ? route : Arrays.asList(order.getPickup(), order.getDrop()));
+            order.setEta(eta != null ? eta : order.getEta());
+
+            Order saved = orderRepository.save(order);
+
+            Map<String, Object> assignmentPayload = new HashMap<>();
+            assignmentPayload.put("order", saved);
+            assignmentPayload.put("driver", driver);
+
+            socketIOService.emit("ORDER_ASSIGNED", assignmentPayload);
+            socketIOService.emit("DRIVER_UPDATED", driver);
+            socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Consignment load accepted! Navigation ready.", "order", saved));
+        } else {
+            // Driver declined load -> return order to confirmed state for re-dispatch
+            order.setStatus("confirmed");
+            order.setDispatchStatus("declined");
+            order.setDispatchRequestedDriverId(null);
+            order.setDispatchRequestedDriverName(null);
+
+            Order saved = orderRepository.save(order);
+
+            socketIOService.emit("DISPATCH_REQUEST_DECLINED", Map.of("order", saved, "driver", driver));
+            socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Consignment load declined.", "order", saved));
         }
     }
 
@@ -227,24 +317,30 @@ public class OrderController {
 
             double eta = distance * 1.6 + 10.0;
 
-            double proximityScore = Math.max(0.0, 100.0 - distance * 5.0);
-            double etaScore = Math.max(0.0, 100.0 - eta * 3.0);
+            // Drivers stationed at or near the source pickup location get huge proximity bonus
+            double proximityScore = Math.max(0.0, 100.0 - distance * 4.0);
+            double etaScore = Math.max(0.0, 100.0 - eta * 2.5);
             double reliabilityScore = driver.getReliability() * 100.0;
             double ratingScore = (driver.getRating() / 5.0) * 100.0;
             double churnPenalty = (1.0 - driver.getChurnRisk()) * 100.0;
 
-            double totalScore = (
-                    proximityScore * 0.30 +
+            // Extra bonus if driver is stationed at the source origin hub (< 15 km away)
+            double sourceTerminalBonus = distance < 15.0 ? 25.0 : 0.0;
+
+            double totalScore = Math.min(99.0, (
+                    proximityScore * 0.35 +
                     etaScore * 0.20 +
                     reliabilityScore * 0.15 +
-                    ratingScore * 0.15 +
-                    churnPenalty * 0.20
-            );
+                    ratingScore * 0.10 +
+                    churnPenalty * 0.20 +
+                    sourceTerminalBonus
+            ));
 
             Map<String, Object> matchItem = new HashMap<>();
             matchItem.put("driver", driver);
             matchItem.put("distance", distance);
             matchItem.put("eta", eta);
+            matchItem.put("isSourceDriver", distance < 25.0);
             matchItem.put("score", Math.round(totalScore));
             scoredDrivers.add(matchItem);
         }
@@ -254,13 +350,13 @@ public class OrderController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("order", order);
-        response.put("matches", scoredDrivers.stream().limit(5).collect(Collectors.toList()));
+        response.put("matches", scoredDrivers.stream().limit(6).collect(Collectors.toList()));
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/assign")
-    public ResponseEntity<?> assignDriver(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> assignDriverDirectly(@RequestBody Map<String, String> body) {
         String orderId = body.get("orderId");
         String driverId = body.get("driverId");
 
@@ -277,25 +373,25 @@ public class OrderController {
         driver.setStatus("busy");
         driverRepository.save(driver);
 
-        // Fetch route optimization from Python ML service
         Map<String, Object> routeResult = mlServiceClient.optimizeRoute(driver.getCurrentLocation(), order.getPickup(), order.getDrop());
         List<Location> route = (List<Location>) routeResult.get("route");
         Double eta = (Double) routeResult.get("total_eta_minutes");
 
         order.setDriverId(driverId);
         order.setStatus("assigned");
+        order.setDispatchStatus("accepted");
         order.setRouteCoordinates(route != null ? route : Arrays.asList(order.getPickup(), order.getDrop()));
         order.setEta(eta != null ? eta : order.getEta());
 
         Order savedOrder = orderRepository.save(order);
 
-        // Emit WebSocket events
         Map<String, Object> assignmentPayload = new HashMap<>();
         assignmentPayload.put("order", savedOrder);
         assignmentPayload.put("driver", driver);
 
         socketIOService.emit("ORDER_ASSIGNED", assignmentPayload);
         socketIOService.emit("DRIVER_UPDATED", driver);
+        socketIOService.emit("ORDER_STATUS_UPDATED", savedOrder);
 
         return ResponseEntity.ok(savedOrder);
     }

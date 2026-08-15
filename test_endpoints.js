@@ -67,26 +67,34 @@ async function runTests() {
     console.log(`    ✓ Shipper Decision: ACCEPTED`);
     console.log(`    ✓ Order Status: ${acceptRes.data.order.status} (Ready for Truck Dispatch)\n`);
 
-    // 6. AI Heavy Truck Driver Matching Matrix
-    console.log('[6] Running AI Matcher scoring matrix for Commercial Heavy Trucks...');
+    // 6. AI Heavy Truck Driver Matching Matrix (Source Hub Prioritized)
+    console.log('[6] Running AI Matcher scoring matrix for Commercial Heavy Trucks stationed at Source Hub...');
     const matches = await axios.post(`${BACKEND_URL}/orders/match`, { orderId });
     console.log('    Top Matched Heavy Trucks:');
     matches.data.matches.forEach((m, idx) => {
-      console.log(`      ${idx + 1}. ${m.driver.name} (${m.driver.vehicleId}) | ${m.driver.vehicleType} | Score: ${m.score}% | ETA: ${Math.round(m.eta)} mins`);
+      console.log(`      ${idx + 1}. ${m.driver.name} (${m.driver.vehicleId}) | ${m.driver.vehicleType} | Score: ${m.score}% | Source Driver: ${m.isSourceDriver ? 'YES (Stationed at Origin Hub)' : 'NO'}`);
     });
     const bestDriverId = matches.data.matches[0].driver.driverId;
-    console.log(`    ✓ Optimal Heavy Truck chosen: ${matches.data.matches[0].driver.name} (${bestDriverId})\n`);
+    console.log(`    ✓ Optimal Heavy Truck chosen at Source: ${matches.data.matches[0].driver.name} (${bestDriverId})\n`);
 
-    // 7. Dispatch Assignment
-    console.log(`[7] Dispatching order to ${matches.data.matches[0].driver.name}...`);
-    const assigned = await axios.post(`${BACKEND_URL}/orders/assign`, {
-      orderId,
+    // 7. Dispatcher Transmits Dispatch Request to Source Heavy Truck Driver
+    console.log(`[7] Dispatcher transmits "Goods Ready to Dispatch" request to source driver ${matches.data.matches[0].driver.name}...`);
+    const reqRes = await axios.post(`${BACKEND_URL}/orders/${orderId}/send-dispatch-request`, {
       driverId: bestDriverId
     });
-    console.log(`    ✓ Status updated to: ${assigned.data.status}`);
-    console.log(`    ✓ Highway Route Generated: ${assigned.data.routeCoordinates.length} waypoints.`);
-    console.log(`    ✓ Estimated Highway Travel Time: ${assigned.data.eta} minutes.`);
-    console.log('\n=== All Tamil Nadu Freight & Warehouse Billing Checks Completed Successfully! ===');
+    console.log(`    ✓ Status: ${reqRes.data.order.status} (Awaiting Driver Response)`);
+    console.log(`    ✓ Requested Driver: ${reqRes.data.order.dispatchRequestedDriverName}\n`);
+
+    // 8. Source Driver Accepts Dispatch Request
+    console.log(`[8] Heavy Truck Driver ${matches.data.matches[0].driver.name} ACCEPTS the load & proceeds to Loading Bay...`);
+    const acceptDispatch = await axios.post(`${BACKEND_URL}/orders/${orderId}/driver-response`, {
+      driverId: bestDriverId,
+      decision: 'accept'
+    });
+    console.log(`    ✓ Status updated to: ${acceptDispatch.data.order.status}`);
+    console.log(`    ✓ Highway Route Generated: ${acceptDispatch.data.order.routeCoordinates.length} waypoints.`);
+    console.log(`    ✓ Estimated Highway Travel Time: ${acceptDispatch.data.order.eta} minutes.`);
+    console.log('\n=== All Tamil Nadu Freight, Warehouse Billing & Source Driver Dispatch Checks Passed! ===');
 
   } catch (error) {
     console.error('✗ Test suite execution failed!');

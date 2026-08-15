@@ -18,7 +18,7 @@ public class Order {
     private String priority = "medium";
     private DeliveryWindow deliveryWindow = new DeliveryWindow();
     private double price;
-    private String status = "pending_quote"; // pending_quote, quoted, confirmed, assigned, picked_up, out_for_delivery, completed, rejected
+    private String status = "pending_quote"; // pending_quote, quoted, confirmed, dispatch_requested, assigned, picked_up, out_for_delivery, completed, rejected
 
     // Warehouse & Storage Service options
     private String warehouseId;
@@ -30,6 +30,11 @@ public class Order {
     // Quotation & Billing Details
     private String quotationStatus = "pending_quote"; // pending_quote, quoted, accepted, rejected
     private BillingDetails billingDetails;
+
+    // Dispatcher to Source Driver Request Flow
+    private String dispatchRequestedDriverId;
+    private String dispatchRequestedDriverName;
+    private String dispatchStatus = "none"; // none, requested, accepted, declined
 
     private String driverId;
     private List<Location> routeCoordinates = new ArrayList<>();
@@ -176,6 +181,30 @@ public class Order {
 
     public void setBillingDetails(BillingDetails billingDetails) {
         this.billingDetails = billingDetails;
+    }
+
+    public String getDispatchRequestedDriverId() {
+        return dispatchRequestedDriverId;
+    }
+
+    public void setDispatchRequestedDriverId(String dispatchRequestedDriverId) {
+        this.dispatchRequestedDriverId = dispatchRequestedDriverId;
+    }
+
+    public String getDispatchRequestedDriverName() {
+        return dispatchRequestedDriverName;
+    }
+
+    public void setDispatchRequestedDriverName(String dispatchRequestedDriverName) {
+        this.dispatchRequestedDriverName = dispatchRequestedDriverName;
+    }
+
+    public String getDispatchStatus() {
+        return dispatchStatus;
+    }
+
+    public void setDispatchStatus(String dispatchStatus) {
+        this.dispatchStatus = dispatchStatus;
     }
 
     public String getDriverId() {

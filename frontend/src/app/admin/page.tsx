@@ -6,7 +6,7 @@ import {
   ShieldCheck, AlertTriangle, Play, RefreshCw, BarChart3, 
   MapPin, User, LogOut, TrendingUp, Compass, Cpu, 
   Zap, CheckCircle2, DollarSign, Leaf, RefreshCcw,
-  Truck, Warehouse, FileText, Send, Check, X, Building2, Anchor
+  Truck, Warehouse, FileText, Send, Check, X, Building2, Anchor, Radio
 } from 'lucide-react';
 import io from 'socket.io-client';
 import axios from 'axios';
@@ -35,6 +35,7 @@ export default function AdminDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [driverMatches, setDriverMatches] = useState<any[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
+  const [sendingDispatch, setSendingDispatch] = useState(false);
   const [socket, setSocket] = useState<any>(null);
 
   // Dispatcher Quotation & Billing customizer
@@ -93,6 +94,16 @@ export default function AdminDashboard() {
     });
 
     newSocket.on('BILL_REJECTED', (order) => {
+      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    });
+
+    newSocket.on('ORDER_DISPATCH_REQUEST', ({ order, driver }) => {
+      setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
+      setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
+    });
+
+    newSocket.on('DISPATCH_REQUEST_DECLINED', ({ order, driver }) => {
       setOrders(prev => prev.map(o => o.orderId === order.orderId ? order : o));
       setSelectedOrder(prev => prev && prev.orderId === order.orderId ? order : prev);
     });
@@ -179,8 +190,8 @@ export default function AdminDashboard() {
     initBillingForm(order);
     setDriverMatches([]);
     
-    if (order.status === 'confirmed') {
-      // Find matching heavy trucks
+    if (order.status === 'confirmed' || order.status === 'dispatch_requested') {
+      // Find matching heavy trucks stationed near the source pickup terminal
       setLoadingMatches(true);
       try {
         const res = await axios.post(`${API_URL}/api/orders/match`, { orderId: order.orderId });
@@ -213,18 +224,20 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleAssignDriver = async (driverId: string) => {
+  // Dispatcher sends request to the chosen driver at the source hub
+  const handleSendDispatchRequest = async (driverId: string) => {
     if (!selectedOrder) return;
+    setSendingDispatch(true);
     try {
-      const res = await axios.post(`${API_URL}/api/orders/assign`, {
-        orderId: selectedOrder.orderId,
+      const res = await axios.post(`${API_URL}/api/orders/${selectedOrder.orderId}/send-dispatch-request`, {
         driverId: driverId
       });
-      setSelectedOrder(res.data);
-      setOrders(prev => prev.map(o => o.orderId === res.data.orderId ? res.data : o));
-      setDriverMatches([]);
+      setSelectedOrder(res.data.order);
+      setOrders(prev => prev.map(o => o.orderId === res.data.order.orderId ? res.data.order : o));
     } catch (err) {
-      alert('Failed to assign heavy truck.');
+      alert('Failed to transmit dispatch request.');
+    } finally {
+      setSendingDispatch(false);
     }
   };
 
@@ -252,7 +265,7 @@ export default function AdminDashboard() {
   // Filtered orders
   const filteredOrders = orders.filter(o => {
     if (orderFilter === 'quotes') return o.status === 'pending_quote' || o.status === 'quoted';
-    if (orderFilter === 'confirmed') return o.status === 'confirmed';
+    if (orderFilter === 'confirmed') return o.status === 'confirmed' || o.status === 'dispatch_requested';
     if (orderFilter === 'active') return ['assigned', 'picked_up', 'out_for_delivery'].includes(o.status);
     if (orderFilter === 'completed') return o.status === 'completed';
     return true;
@@ -276,7 +289,7 @@ export default function AdminDashboard() {
               <span className="text-base font-extrabold tracking-wide text-white">TAMIL NADU FREIGHT CONTROL TOWER</span>
               <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold px-2 py-0.5 rounded-full">16 Terminals & Ports</span>
             </div>
-            <span className="text-xs text-zinc-400">Dispatcher Command Station • Heavy Fleet & Warehouse Billing</span>
+            <span className="text-xs text-zinc-400">Dispatcher Command Station • Source Terminal Truck Matching</span>
           </div>
         </div>
 
@@ -336,13 +349,13 @@ export default function AdminDashboard() {
               <FileText className="w-6 h-6 text-amber-400" />
             </div>
             <div>
-              <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Quotes Awaiting Decision</span>
-              <p className="text-xl font-black text-amber-400">{orders.filter(o => o.status === 'pending_quote' || o.status === 'quoted').length}</p>
+              <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Ready for Dispatch</span>
+              <p className="text-xl font-black text-emerald-400">{orders.filter(o => o.status === 'confirmed').length}</p>
             </div>
           </div>
         </section>
 
-        {/* Left Column: Orders & B2B Billing Presenter (4 Cols) */}
+        {/* Left Column: Orders & Dispatcher Actions (4 Cols) */}
         <section className="xl:col-span-4 space-y-4">
           
           {/* Order List & Filter Tabs */}
@@ -364,13 +377,13 @@ export default function AdminDashboard() {
                     orderFilter === tab ? 'bg-cyan-500 text-zinc-950 font-bold' : 'text-zinc-400 hover:bg-zinc-800'
                   }`}
                 >
-                  {tab === 'quotes' ? 'Quotations' : tab}
+                  {tab === 'quotes' ? 'Quotations' : tab === 'confirmed' ? 'Ready for Dispatch' : tab}
                 </button>
               ))}
             </div>
 
             {/* Orders Scroll List */}
-            <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
               {filteredOrders.length === 0 ? (
                 <div className="text-center py-8 text-zinc-600 text-xs">No orders in this view.</div>
               ) : (
@@ -390,7 +403,8 @@ export default function AdminDashboard() {
                         order.status === 'pending_quote' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
                         order.status === 'quoted' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' :
                         order.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
-                        order.status === 'assigned' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' :
+                        order.status === 'dispatch_requested' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30 animate-pulse' :
+                        order.status === 'assigned' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' :
                         order.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
                         'bg-zinc-800 text-zinc-400 border-zinc-700'
                       }`}>
@@ -409,136 +423,163 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Quotation & Bill Presenter Box (When Order is Selected) */}
+          {/* Action Box: Quotation Presenter OR Source Driver Dispatcher */}
           {selectedOrder && (
             <div className="bg-zinc-900/60 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-xl">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-amber-400" /> Dispatcher Quotation Presenter
-                </h3>
-                <span className="text-[10px] text-zinc-400 font-mono">{selectedOrder.orderId}</span>
-              </div>
-
-              {/* Status info */}
-              <div className="flex items-center justify-between text-xs bg-zinc-950 p-2.5 rounded-xl border border-zinc-800">
-                <span className="text-zinc-400">Shipper Decision:</span>
-                <span className={`font-bold capitalize ${
-                  selectedOrder.quotationStatus === 'accepted' ? 'text-emerald-400' :
-                  selectedOrder.quotationStatus === 'rejected' ? 'text-rose-400' :
-                  selectedOrder.quotationStatus === 'quoted' ? 'text-cyan-400 animate-pulse' :
-                  'text-amber-400'
-                }`}>
-                  {selectedOrder.quotationStatus === 'pending_quote' ? 'Awaiting Dispatcher Bill' :
-                   selectedOrder.quotationStatus === 'quoted' ? 'Quotation Sent to Shipper' :
-                   selectedOrder.quotationStatus === 'accepted' ? 'Accepted by Shipper (Ready for Dispatch)' :
-                   'Declined by Shipper'}
-                </span>
-              </div>
-
-              {/* Bill Line-Item Inputs */}
-              <div className="space-y-2 text-xs">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">Freight Base (₹)</label>
-                    <input
-                      type="number"
-                      value={editFreightBase}
-                      onChange={(e) => setEditFreightBase(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
-                    />
+              
+              {/* If Order is in Quotation Phase */}
+              {(selectedOrder.status === 'pending_quote' || selectedOrder.status === 'quoted') && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-amber-400" /> Dispatcher Quotation Presenter
+                    </h3>
+                    <span className="text-[10px] text-zinc-400 font-mono">{selectedOrder.orderId}</span>
                   </div>
-                  <div>
-                    <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">Warehouse Storage (₹)</label>
-                    <input
-                      type="number"
-                      value={editStorageFee}
-                      onChange={(e) => setEditStorageFee(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
-                    />
+
+                  <div className="space-y-2 text-xs">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">Freight Base (₹)</label>
+                        <input
+                          type="number"
+                          value={editFreightBase}
+                          onChange={(e) => setEditFreightBase(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">Warehouse Storage (₹)</label>
+                        <input
+                          type="number"
+                          value={editStorageFee}
+                          onChange={(e) => setEditStorageFee(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">Handling / Forklift (₹)</label>
+                        <input
+                          type="number"
+                          value={editHandlingFee}
+                          onChange={(e) => setEditHandlingFee(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">NHAI Toll Surcharge (₹)</label>
+                        <input
+                          type="number"
+                          value={editTollSurcharge}
+                          onChange={(e) => setEditTollSurcharge(parseFloat(e.target.value) || 0)}
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  <button
+                    onClick={handlePresentBill}
+                    disabled={presentingBill}
+                    className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-cyan-500 hover:from-amber-400 hover:to-cyan-400 text-zinc-950 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <Send className="w-3.5 h-3.5" /> Present / Update Bill to Shipper
+                  </button>
                 </div>
+              )}
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">Handling / Forklift (₹)</label>
-                    <input
-                      type="number"
-                      value={editHandlingFee}
-                      onChange={(e) => setEditHandlingFee(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">NHAI Toll Surcharge (₹)</label>
-                    <input
-                      type="number"
-                      value={editTollSurcharge}
-                      onChange={(e) => setEditTollSurcharge(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-zinc-500 text-[9px] uppercase font-bold mb-1">Dispatcher Remarks</label>
-                  <input
-                    type="text"
-                    value={editNotes}
-                    onChange={(e) => setEditNotes(e.target.value)}
-                    placeholder="Custom logistics terms..."
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Action Button */}
-              {selectedOrder.status === 'pending_quote' || selectedOrder.status === 'quoted' ? (
-                <button
-                  onClick={handlePresentBill}
-                  disabled={presentingBill}
-                  className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-cyan-500 hover:from-amber-400 hover:to-cyan-400 text-zinc-950 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <Send className="w-3.5 h-3.5" /> Present / Update Official Bill to Shipper
-                </button>
-              ) : null}
-
-              {/* Heavy Truck Matching (If Shipper Accepted Bill) */}
-              {selectedOrder.status === 'confirmed' && (
-                <div className="pt-2 border-t border-zinc-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4" /> Bill Accepted: Dispatch Heavy Truck
-                    </span>
+              {/* If Order is Confirmed -> Source Terminal Driver Matcher */}
+              {(selectedOrder.status === 'confirmed' || selectedOrder.status === 'dispatch_requested') && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                        <Radio className="w-4 h-4 text-emerald-400 animate-pulse" /> Dispatch to Source Hub Driver
+                      </h3>
+                      <span className="text-[11px] text-zinc-400 block mt-0.5">Origin: <strong>{selectedOrder.pickup?.address}</strong></span>
+                    </div>
                     <button
                       onClick={() => handleOrderSelect(selectedOrder)}
-                      className="text-[10px] text-cyan-400 hover:underline"
+                      className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1"
                     >
-                      Refresh Scoring
+                      <RefreshCw className="w-3 h-3" /> Refresh
                     </button>
                   </div>
 
-                  <div className="space-y-1.5">
+                  {selectedOrder.status === 'dispatch_requested' && (
+                    <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl text-xs space-y-1">
+                      <span className="font-bold text-indigo-300 flex items-center gap-1.5">
+                        <Radio className="w-3.5 h-3.5 text-indigo-400 animate-spin" /> Dispatch Request Transmitted!
+                      </span>
+                      <p className="text-zinc-400 text-[11px]">
+                        Waiting for source truck driver <strong>{selectedOrder.dispatchRequestedDriverName || 'Driver'}</strong> to accept load and confirm pickup bay.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Scored Source Drivers */}
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                     {loadingMatches ? (
-                      <div className="text-xs text-zinc-500 text-center py-2">Computing AI scoring matrix...</div>
+                      <div className="text-xs text-zinc-500 text-center py-4">Scanning Tamil Nadu fleet for source terminal drivers...</div>
                     ) : driverMatches.length === 0 ? (
-                      <div className="text-xs text-zinc-500 text-center py-2">Click below to find heavy trucks</div>
+                      <div className="text-xs text-zinc-500 text-center py-4">Click Refresh to find stationed heavy trucks</div>
                     ) : (
                       driverMatches.map((m: any, idx: number) => (
-                        <div key={idx} className="p-2 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-between text-xs">
-                          <div>
-                            <span className="font-bold text-white block">{m.driver.name}</span>
-                            <span className="text-[10px] text-zinc-500">{m.driver.vehicleType} • Match {m.score}%</span>
+                        <div 
+                          key={idx} 
+                          className={`p-3 rounded-2xl border transition-all text-xs space-y-2 ${
+                            m.isSourceDriver 
+                              ? 'bg-cyan-950/20 border-cyan-500/40' 
+                              : 'bg-zinc-950 border-zinc-800'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-white">{m.driver.name}</span>
+                                {m.isSourceDriver && (
+                                  <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-semibold">
+                                    ★ Source Hub
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-zinc-400">{m.driver.vehicleType} • {m.driver.vehicleId}</span>
+                            </div>
+                            <span className="text-xs font-bold text-cyan-400">{m.score}% Match</span>
                           </div>
-                          <button
-                            onClick={() => handleAssignDriver(m.driver.driverId)}
-                            className="px-3 py-1 bg-cyan-500 text-zinc-950 font-bold rounded-lg text-xs hover:bg-cyan-400"
-                          >
-                            Assign Truck
-                          </button>
+
+                          <div className="flex items-center justify-between pt-1 border-t border-zinc-800/60">
+                            <span className="text-[10px] text-zinc-500">{m.distance.toFixed(1)} km from loading bay • ETA ~{Math.round(m.eta)}m</span>
+                            <button
+                              onClick={() => handleSendDispatchRequest(m.driver.driverId)}
+                              disabled={sendingDispatch || (selectedOrder.status === 'dispatch_requested' && selectedOrder.dispatchRequestedDriverId === m.driver.driverId)}
+                              className="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-zinc-950 font-bold rounded-lg text-xs transition-all shadow-sm flex items-center gap-1"
+                            >
+                              <Send className="w-3 h-3 text-zinc-950" /> Send Dispatch Request
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* If Order is Assigned */}
+              {selectedOrder.status === 'assigned' && activeDriverObj && (
+                <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Driver Accepted Load!
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono">{activeDriverObj.vehicleId}</span>
+                  </div>
+                  <p className="text-zinc-300">
+                    <strong>{activeDriverObj.name}</strong> has confirmed consignment pickup. Route navigation active.
+                  </p>
                 </div>
               )}
 

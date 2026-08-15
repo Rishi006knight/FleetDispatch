@@ -1,13 +1,8 @@
 package com.fleet.dispatch.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.util.Date;
 
-@Document(collection = "telemetry")
 public class Telemetry {
-    @Id
     private String id;
     private String driverId;
     private String orderId;

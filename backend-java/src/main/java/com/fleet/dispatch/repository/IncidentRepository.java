@@ -1,23 +1,67 @@
 package com.fleet.dispatch.repository;
 
 import com.fleet.dispatch.model.Incident;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Repository
-public interface IncidentRepository extends MongoRepository<Incident, String> {
+public class IncidentRepository {
+    private final Map<String, Incident> storage = new ConcurrentHashMap<>();
 
-    /** Lookup by business-key (same as findById since incidentId is @Id) */
-    Optional<Incident> findByIncidentId(String incidentId);
+    public Incident save(Incident incident) {
+        if (incident.getIncidentId() == null || incident.getIncidentId().isEmpty()) {
+            incident.setIncidentId("INC-" + (int)(100000 + Math.random() * 900000));
+        }
+        if (incident.getTimestamp() == null) {
+            incident.setTimestamp(new Date());
+        }
+        storage.put(incident.getIncidentId(), incident);
+        return incident;
+    }
 
-    /** All incidents sorted by timestamp descending — replaces the hand-rolled sorted findAll() */
-    List<Incident> findAllByOrderByTimestampDesc();
+    public List<Incident> saveAll(Iterable<Incident> incidents) {
+        List<Incident> result = new ArrayList<>();
+        for (Incident inc : incidents) {
+            result.add(save(inc));
+        }
+        return result;
+    }
 
-    /** Find an open incident matching orderId + type — replaces the stream().filter() logic */
-    @Query("{ 'orderId': ?0, 'type': ?1, 'status': 'open' }")
-    Optional<Incident> findOpenIncident(String orderId, String type);
+    public Optional<Incident> findByIncidentId(String incidentId) {
+        return Optional.ofNullable(storage.get(incidentId));
+    }
+
+    public Optional<Incident> findById(String incidentId) {
+        return findByIncidentId(incidentId);
+    }
+
+    public List<Incident> findAll() {
+        return storage.values().stream()
+                .sorted((a, b) -> {
+                    if (a.getTimestamp() == null || b.getTimestamp() == null) return 0;
+                    return b.getTimestamp().compareTo(a.getTimestamp());
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<Incident> findAllByOrderByTimestampDesc() {
+        return findAll();
+    }
+
+    public Optional<Incident> findOpenIncident(String orderId, String type) {
+        return storage.values().stream()
+                .filter(i -> orderId.equals(i.getOrderId()) && type.equals(i.getType()) && "open".equalsIgnoreCase(i.getStatus()))
+                .findFirst();
+    }
+
+    public long count() {
+        return storage.size();
+    }
+
+    public void deleteAll() {
+        storage.clear();
+    }
 }

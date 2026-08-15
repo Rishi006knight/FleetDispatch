@@ -1,21 +1,68 @@
 package com.fleet.dispatch.repository;
 
 import com.fleet.dispatch.model.Order;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Repository
-public interface OrderRepository extends MongoRepository<Order, String> {
+public class OrderRepository {
+    private final Map<String, Order> storage = new ConcurrentHashMap<>();
 
-    /** Lookup by business-key (same as findById since orderId is @Id) */
-    Optional<Order> findByOrderId(String orderId);
+    public Order save(Order order) {
+        if (order.getOrderId() == null || order.getOrderId().isEmpty()) {
+            order.setOrderId("ORD-" + (int)(100000 + Math.random() * 900000));
+        }
+        order.setUpdatedAt(new Date());
+        if (order.getCreatedAt() == null) {
+            order.setCreatedAt(new Date());
+        }
+        storage.put(order.getOrderId(), order);
+        return order;
+    }
 
-    /** All orders for a specific driver */
-    List<Order> findByDriverId(String driverId);
+    public List<Order> saveAll(Iterable<Order> orders) {
+        List<Order> result = new ArrayList<>();
+        for (Order o : orders) {
+            result.add(save(o));
+        }
+        return result;
+    }
 
-    /** All orders sorted by createdAt descending — replaces the hand-rolled sorted findAll() */
-    List<Order> findAllByOrderByCreatedAtDesc();
+    public Optional<Order> findByOrderId(String orderId) {
+        return Optional.ofNullable(storage.get(orderId));
+    }
+
+    public Optional<Order> findById(String orderId) {
+        return findByOrderId(orderId);
+    }
+
+    public List<Order> findAll() {
+        return storage.values().stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null || b.getCreatedAt() == null) return 0;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<Order> findAllByOrderByCreatedAtDesc() {
+        return findAll();
+    }
+
+    public List<Order> findByDriverId(String driverId) {
+        return storage.values().stream()
+                .filter(o -> driverId.equals(o.getDriverId()))
+                .collect(Collectors.toList());
+    }
+
+    public long count() {
+        return storage.size();
+    }
+
+    public void deleteAll() {
+        storage.clear();
+    }
 }

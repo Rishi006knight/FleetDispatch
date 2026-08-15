@@ -1,21 +1,61 @@
 package com.fleet.dispatch.repository;
 
 import com.fleet.dispatch.model.Driver;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Repository
-public interface DriverRepository extends MongoRepository<Driver, String> {
+public class DriverRepository {
+    private final Map<String, Driver> storage = new ConcurrentHashMap<>();
 
-    /** Lookup by business-key (same as findById since driverId is @Id) */
-    Optional<Driver> findByDriverId(String driverId);
+    public Driver save(Driver driver) {
+        if (driver.getDriverId() == null || driver.getDriverId().isEmpty()) {
+            driver.setDriverId("DRV-" + (int)(1000 + Math.random() * 9000));
+        }
+        storage.put(driver.getDriverId(), driver);
+        return driver;
+    }
 
-    /** Filter drivers by status field (e.g. "online", "offline", "busy") */
-    List<Driver> findByStatus(String status);
+    public List<Driver> saveAll(Iterable<Driver> drivers) {
+        List<Driver> result = new ArrayList<>();
+        for (Driver d : drivers) {
+            result.add(save(d));
+        }
+        return result;
+    }
 
-    /** Count all drivers that are NOT offline — replaces countActiveDrivers() */
-    long countByStatusNot(String status);
+    public Optional<Driver> findByDriverId(String driverId) {
+        return Optional.ofNullable(storage.get(driverId));
+    }
+
+    public Optional<Driver> findById(String driverId) {
+        return findByDriverId(driverId);
+    }
+
+    public List<Driver> findByStatus(String status) {
+        return storage.values().stream()
+                .filter(d -> status.equalsIgnoreCase(d.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    public long countByStatusNot(String status) {
+        return storage.values().stream()
+                .filter(d -> !status.equalsIgnoreCase(d.getStatus()))
+                .count();
+    }
+
+    public List<Driver> findAll() {
+        return new ArrayList<>(storage.values());
+    }
+
+    public long count() {
+        return storage.size();
+    }
+
+    public void deleteAll() {
+        storage.clear();
+    }
 }

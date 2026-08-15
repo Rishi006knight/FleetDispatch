@@ -144,114 +144,24 @@ export default function LandingLoginPage() {
     <div className="relative min-h-screen w-full bg-[#0c1220] text-white flex flex-col justify-between overflow-x-hidden select-none">
       
       {/* ==================================================================== */}
-      {/* BACKGROUND: Accurate Tamil Nadu Layered Logistics Background          */}
+      {/* BACKGROUND: High-Resolution Tamil Nadu Logistics Map & Ambient Layer */}
       {/* ==================================================================== */}
-      <div className="tn-map-bg">
-        
-        {/* Soft Radial Ambient Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[550px] bg-gradient-to-tr from-amber-500/5 via-blue-900/10 to-transparent rounded-full blur-3xl opacity-40"></div>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Generated Tamil Nadu Map & Logistics Hubs Image */}
+        <div 
+          className="absolute inset-0 bg-center bg-cover bg-no-repeat opacity-85 scale-100 transition-transform duration-1000"
+          style={{ backgroundImage: `url('/images/tn_logistics_bg.jpg')` }}
+        />
 
-        <svg 
-          viewBox="0 0 350 480" 
-          className="pointer-events-none"
-        >
-          <defs>
-            <filter id="hubSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Accurate, recognizable Tamil Nadu State Shape with 3% amber fill & 15% border */}
-          <path 
-            d="M 200 30 
-               C 220 28, 260 50, 275 80 
-               C 285 100, 280 130, 285 170 
-               C 290 200, 275 235, 255 260 
-               C 245 275, 225 305, 210 335 
-               C 200 360, 185 395, 170 420 
-               C 155 445, 130 435, 120 400 
-               C 110 365, 125 330, 140 300 
-               C 150 280, 140 260, 125 230 
-               C 110 200, 115 165, 135 135 
-               C 150 110, 160 80, 175 55 
-               C 185 38, 190 32, 200 30 Z"
-            fill="rgba(230, 126, 34, 0.03)"
-            stroke="rgba(230, 126, 34, 0.15)"
-            strokeWidth="1.5"
-          />
-
-          {/* Static Connection Lines — 8% opacity, thin, NO spinning */}
-          <g stroke="rgba(230, 126, 34, 0.08)" strokeWidth="1" fill="none">
-            {/* Chennai -> Ennore */}
-            <line x1="275" y1="80" x2="278" y2="62" />
-            {/* Chennai -> Koyambedu -> Tambaram */}
-            <line x1="275" y1="80" x2="265" y2="92" />
-            <line x1="265" y1="92" x2="255" y2="115" />
-            {/* Chennai -> Vellore -> Hosur */}
-            <line x1="275" y1="80" x2="215" y2="105" />
-            <line x1="215" y1="105" x2="168" y2="115" />
-            {/* Vellore -> Salem -> Erode -> Tiruppur -> Coimbatore */}
-            <line x1="215" y1="105" x2="195" y2="175" />
-            <line x1="195" y1="175" x2="168" y2="205" />
-            <line x1="168" y1="205" x2="150" y2="218" />
-            <line x1="150" y1="218" x2="130" y2="228" />
-            {/* Salem -> Trichy -> Thanjavur */}
-            <line x1="195" y1="175" x2="215" y2="238" />
-            <line x1="215" y1="238" x2="250" y2="245" />
-            {/* Trichy -> Madurai -> Tirunelveli -> Thoothukudi -> Nagercoil */}
-            <line x1="215" y1="238" x2="190" y2="300" />
-            <line x1="190" y1="300" x2="175" y2="365" />
-            <line x1="175" y1="365" x2="210" y2="355" />
-            <line x1="175" y1="365" x2="155" y2="418" />
-          </g>
-
-          {/* Hub Dots — only Chennai Port has a subtle pulse, rest are quiet */}
-          <g>
-            {/* Chennai Port (Main Hub - 4px, subtle slow pulse) */}
-            <circle cx="275" cy="80" r="5.5" fill="none" stroke="#e67e22" strokeWidth="1" opacity="0.4" className="qe-hub-dot" />
-            <circle cx="275" cy="80" r="2.5" fill="#e67e22" opacity="0.7" filter="url(#hubSoftGlow)" />
-
-            {/* Ennore Port (4px, 65% opacity) */}
-            <circle cx="278" cy="62" r="2.5" fill="#e67e22" opacity="0.65" filter="url(#hubSoftGlow)" />
-
-            {/* Thoothukudi Port (4px, 65% opacity) */}
-            <circle cx="210" cy="355" r="2.5" fill="#e67e22" opacity="0.65" filter="url(#hubSoftGlow)" />
-
-            {/* Primary Gateways (Orange, 3px, 50% opacity) */}
-            <circle cx="265" cy="92" r="2" fill="#f39c12" opacity="0.5" />
-            <circle cx="255" cy="115" r="2" fill="#f39c12" opacity="0.5" />
-
-            {/* Industrial Hubs (Blue, 3px, 50% opacity) */}
-            <circle cx="215" cy="105" r="2" fill="#3b82f6" opacity="0.5" />
-            <circle cx="168" cy="115" r="2" fill="#3b82f6" opacity="0.5" />
-            <circle cx="195" cy="175" r="2" fill="#3b82f6" opacity="0.5" />
-            <circle cx="168" cy="205" r="2" fill="#3b82f6" opacity="0.5" />
-            <circle cx="150" cy="218" r="2" fill="#3b82f6" opacity="0.5" />
-            <circle cx="130" cy="228" r="2" fill="#3b82f6" opacity="0.5" />
-
-            {/* Regional Hubs (Teal, 3px, 50% opacity) */}
-            <circle cx="215" cy="238" r="2" fill="#14b8a6" opacity="0.5" />
-            <circle cx="250" cy="245" r="2" fill="#14b8a6" opacity="0.5" />
-            <circle cx="190" cy="300" r="2" fill="#14b8a6" opacity="0.5" />
-            <circle cx="175" cy="365" r="2" fill="#14b8a6" opacity="0.5" />
-            <circle cx="155" cy="418" r="2" fill="#14b8a6" opacity="0.5" />
-          </g>
-        </svg>
-
-        {/* Bottom soft gradient fade */}
-        <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-[#0c1220] to-transparent"></div>
+        {/* Ambient Dark Gradient & Vignette Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0c1220]/70 via-transparent to-[#0c1220]/85" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(12,18,32,0.15)_0%,rgba(12,18,32,0.75)_100%)]" />
       </div>
-
-
 
       {/* ==================================================================== */}
       {/* TOP BAR: Fixed Header                                                */}
       {/* ==================================================================== */}
-      <header className="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md bg-[#0c1220]/60">
+      <header className="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-white/10 backdrop-blur-xl bg-[#0c1220]/60">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight text-white">QUANTUM</span>
@@ -263,9 +173,9 @@ export default function LandingLoginPage() {
         </div>
 
         <div className="flex items-center gap-4 text-xs text-gray-400 font-medium">
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full">
+          <div className="flex items-center gap-2 bg-[#0c1220]/70 border border-amber-500/30 px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-lg">
             <span className="w-2 h-2 rounded-full bg-[#e67e22] animate-ping"></span>
-            <span>16 State Logistics & Warehousing Hubs</span>
+            <span className="text-amber-300 font-semibold">16 State Logistics Hubs Active</span>
           </div>
           <span className="text-gray-500">© 2026</span>
         </div>
@@ -276,107 +186,107 @@ export default function LandingLoginPage() {
       {/* ==================================================================== */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-12">
         
-        {/* VIEW 1: 3 Glass Portal Cards (Initial State) */}
+        {/* VIEW 1: Portal Cards Selection */}
         {!selectedPortal && (
           <div className="w-full max-w-[1240px] flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
             
             <div className="text-center mb-12">
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#f39c12] bg-[#f39c12]/10 border border-[#f39c12]/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#f39c12] bg-[#f39c12]/15 border border-[#f39c12]/30 px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-md">
                 Tamil Nadu Heavy Freight Gateway
               </span>
-              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mt-3">
+              <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight mt-4 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
                 Select Your Enterprise Portal
               </h1>
-              <p className="text-sm text-gray-400 mt-2 max-w-xl mx-auto">
+              <p className="text-sm md:text-base text-gray-300 mt-3 max-w-xl mx-auto drop-shadow-md">
                 Connect directly with ports, commercial fleet terminals, and automated dispatch across the state.
               </p>
             </div>
 
-            {/* 3 Dark Glass Cards Row */}
+            {/* 3 Translucent Glass Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
               
               {/* Card 1: B2B Shipper */}
               <div 
                 onClick={() => setSelectedPortal('shipper')}
-                className="group relative bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-2xl border border-white/10 hover:border-[#e67e22]/50 rounded-2xl p-8 h-[300px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 hover:shadow-[0_0_40px_rgba(230,126,34,0.25)]"
+                className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
               >
                 <div>
-                  <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300 shadow-md">
                     <Building2 className="w-8 h-8" />
                   </div>
                   <h3 className="text-2xl font-semibold text-white mt-6 group-hover:text-[#f39c12] transition-colors">
                     B2B Shipper
                   </h3>
-                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                  <p className="text-xs text-gray-300 mt-2 leading-relaxed">
                     Book commercial freight, get dispatcher quotations, and manage warehouse staging across 16 state hubs.
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <span className="text-sm font-semibold text-[#e67e22] flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform">
                     Enter Portal <ArrowRight className="w-4 h-4" />
                   </span>
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-mono">CFS & Yards</span>
+                  <span className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">CFS & Yards</span>
                 </div>
 
                 {/* Bottom Decorative Gradient Line */}
-                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/40 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
+                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/50 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
               </div>
 
               {/* Card 2: Heavy Truck Driver */}
               <div 
                 onClick={() => setSelectedPortal('driver')}
-                className="group relative bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-2xl border border-white/10 hover:border-[#e67e22]/50 rounded-2xl p-8 h-[300px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 hover:shadow-[0_0_40px_rgba(230,126,34,0.25)]"
+                className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
               >
                 <div>
-                  <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300 shadow-md">
                     <Truck className="w-8 h-8" />
                   </div>
                   <h3 className="text-2xl font-semibold text-white mt-6 group-hover:text-[#f39c12] transition-colors">
                     Heavy Truck Driver
                   </h3>
-                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                  <p className="text-xs text-gray-300 mt-2 leading-relaxed">
                     Receive direct load dispatches, view highway routes, track trip earnings, and submit digital POD proofs.
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <span className="text-sm font-semibold text-[#e67e22] flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform">
                     Enter Portal <ArrowRight className="w-4 h-4" />
                   </span>
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-mono">RTO Network</span>
+                  <span className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">RTO Network</span>
                 </div>
 
                 {/* Bottom Decorative Gradient Line */}
-                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/40 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
+                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/50 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
               </div>
 
               {/* Card 3: Dispatcher Control Tower */}
               <div 
                 onClick={() => setSelectedPortal('dispatcher')}
-                className="group relative bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-2xl border border-white/10 hover:border-[#e67e22]/50 rounded-2xl p-8 h-[300px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 hover:shadow-[0_0_40px_rgba(230,126,34,0.25)]"
+                className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
               >
                 <div>
-                  <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300 shadow-md">
                     <Radio className="w-8 h-8" />
                   </div>
                   <h3 className="text-2xl font-semibold text-white mt-6 group-hover:text-[#f39c12] transition-colors">
                     Dispatcher Tower
                   </h3>
-                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                  <p className="text-xs text-gray-300 mt-2 leading-relaxed">
                     Full command center to monitor live fleet telemetry, approve toll quotations, assign drivers, and resolve incidents.
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
                   <span className="text-sm font-semibold text-[#e67e22] flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform">
                     Enter Portal <ArrowRight className="w-4 h-4" />
                   </span>
-                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-mono">State Admin</span>
+                  <span className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">State Admin</span>
                 </div>
 
                 {/* Bottom Decorative Gradient Line */}
-                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/40 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
+                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/50 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
               </div>
 
             </div>
@@ -386,7 +296,7 @@ export default function LandingLoginPage() {
 
         {/* VIEW 2: Slide-in Dark Glass Login Form */}
         {selectedPortal && (
-          <div className="w-full max-w-[500px] bg-white/[0.05] backdrop-blur-2xl border border-white/10 rounded-2xl p-8 md:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-400">
+          <div className="w-full max-w-[500px] bg-[#0c1220]/75 backdrop-blur-3xl border border-white/10 rounded-2xl p-8 md:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-400">
             
             {/* Back Button */}
             <button 

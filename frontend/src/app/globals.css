@@ -1,55 +1,380 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #09090b; /* Zinc 950 (Dark mode by default) */
-  --foreground: #f4f4f5; /* Zinc 100 */
-}
+  /* Core Color Tokens */
+  --bg-primary: #f8f9fb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f3f6;
+  
+  --accent-primary: #e67e22;
+  --accent-secondary: #f39c12;
+  --accent-gradient: linear-gradient(135deg, #e67e22, #f39c12);
+  --accent-subtle: rgba(230, 126, 34, 0.08);
+  --accent-glow: 0 0 20px rgba(230, 126, 34, 0.15);
+  
+  --text-primary: #1a1d23;
+  --text-secondary: #5a6070;
+  --text-muted: #9ca3af;
+  
+  --border-light: rgba(0, 0, 0, 0.06);
+  --border-medium: rgba(0, 0, 0, 0.12);
+  
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
   margin: 0;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom leaflet map markers & styling for premium look */
-.leaflet-container {
-  background: #18181b !important; /* matching dark mode map backgrounds */
-  width: 100%;
-  height: 100%;
-  border-radius: 0.75rem;
+/* Monospace text */
+.font-mono {
+  font-family: var(--font-mono);
 }
 
-.leaflet-bar a {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-bottom: 1px solid #27272a !important;
-}
-
-.leaflet-bar a:hover {
-  background-color: #27272a !important;
-}
-
-/* Scrollbar styles */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
-}
-::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--bg-tertiary);
   border-radius: 3px;
 }
+::-webkit-scrollbar-thumb {
+  background: rgba(230, 126, 34, 0.4);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: rgba(230, 126, 34, 0.8);
 }
 
+/* Cards & Hover Elevations */
+.qe-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.qe-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-medium);
+}
+
+/* Custom Interactive Form Controls */
+.qe-input, .qe-select {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.qe-input:focus, .qe-select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15);
+}
+
+.qe-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e67e22' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+/* Dark Glass Input for Login */
+.qe-glass-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  width: 100%;
+}
+
+.qe-glass-input:focus {
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.3);
+}
+
+.qe-glass-input::placeholder {
+  color: #6b7280;
+}
+
+/* Buttons */
+.qe-btn-primary {
+  background: var(--accent-gradient);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(230, 126, 34, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+}
+
+.qe-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(230, 126, 34, 0.35);
+  filter: brightness(1.05);
+}
+
+.qe-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.qe-btn-secondary {
+  background: #ffffff;
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.qe-btn-secondary:hover {
+  background: var(--accent-primary);
+  color: #ffffff;
+}
+
+.qe-btn-ghost {
+  background: transparent;
+  color: var(--accent-primary);
+  border: none;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.qe-btn-ghost:hover {
+  background: var(--accent-subtle);
+}
+
+/* Custom Toggle Switch */
+.qe-toggle-track {
+  width: 44px;
+  height: 24px;
+  background-color: #d1d5db;
+  border-radius: 9999px;
+  position: relative;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.qe-toggle-track.active {
+  background: var(--accent-gradient);
+}
+
+.qe-toggle-thumb {
+  width: 18px;
+  height: 18px;
+  background-color: #ffffff;
+  border-radius: 9999px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.qe-toggle-track.active .qe-toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* Table Row Hover Animations */
+.qe-table-row {
+  transition: background-color 0.2s ease, border-left-color 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.qe-table-row:hover {
+  background-color: rgba(230, 126, 34, 0.04);
+  border-left-color: var(--accent-primary);
+}
+
+/* Pulsing Status Rings */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.qe-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.qe-pulse-slow {
+  animation: pulse-ring 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* Landing Page Pulse Wave */
+@keyframes hub-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(230, 126, 34, 0.4);
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 24px rgba(230, 126, 34, 0.85);
+  }
+}
+
+.qe-hub-dot {
+  animation: hub-pulse 3s ease-in-out infinite;
+}
+
+/* Radar Ping Expansion (Driver Waiting State) */
+@keyframes radar-expand {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.qe-radar-ring-1 {
+  animation: radar-expand 3s ease-out infinite;
+}
+.qe-radar-ring-2 {
+  animation: radar-expand 3s ease-out 1s infinite;
+}
+.qe-radar-ring-3 {
+  animation: radar-expand 3s ease-out 2s infinite;
+}
+
+/* Moving Cargo Dot along Line */
+@keyframes cargo-flow {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+/* Leaflet Container overrides for Positron Light */
+.leaflet-container {
+  background: #f8f9fb !important;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-bar {
+  border: 1px solid var(--border-light) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.leaflet-bar a {
+  background-color: #ffffff !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--accent-subtle) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* Tooltip & Popup styling */
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-xl) !important;
+  border: 1px solid var(--border-light) !important;
+  padding: 4px !important;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+.qe-dark-tooltip {
+  background: rgba(12, 18, 32, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  padding: 8px 12px !important;
+}
+
+.qe-dark-tooltip::before {
+  border-top-color: rgba(12, 18, 32, 0.92) !important;
+}

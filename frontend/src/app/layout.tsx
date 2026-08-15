@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Quantum Express | AI Fleet & Delivery Platform',
-  description: 'Intelligent Real-time Fleet Tracking, Route Optimization and Dynamic Pricing Platform',
+  title: 'Quantum Express | Tamil Nadu B2B Logistics & State Freight Platform',
+  description: 'Enterprise B2B Freight Orchestration & State Logistics Center Platform across 16 Tamil Nadu Warehousing Hubs.',
 };
 
 export default function RootLayout({
@@ -12,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-zinc-950 text-zinc-100">
-      <body className="h-full antialiased font-sans flex flex-col">
+    <html lang="en" className="h-full">
+      <body className="h-full antialiased font-sans flex flex-col min-h-screen">
         {children}
       </body>
     </html>

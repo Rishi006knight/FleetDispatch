@@ -2,194 +2,30 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Truck, UserCircle2, ArrowRight, Lock, KeyRound, Warehouse, Info, Building2 } from 'lucide-react';
+import { 
+  Building2, Truck, Radio, ArrowRight, ArrowLeft, 
+  ShieldCheck, Lock, Warehouse, Check, ChevronRight, Anchor
+} from 'lucide-react';
+import { TAMIL_NADU_WAREHOUSES } from './constants/locations';
 
-const STATION_DRIVER_ROSTER: Record<string, {
-  district: string;
-  address: string;
-  lat: number;
-  lng: number;
-  drivers: Array<{ name: string; truckType: string }>;
-}> = {
-  '01': {
-    district: 'Chennai Port',
-    address: 'Rajaji Salai, Chennai Port CFS',
-    lat: 13.0844,
-    lng: 80.2936,
-    drivers: [
-      { name: 'Murugan', truckType: '32ft Heavy Trailer' },
-      { name: 'Kaliyaperumal', truckType: '40ft Container Freightliner' },
-      { name: 'Soundararajan', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Thangaraj', truckType: '32ft Heavy Trailer' },
-    ]
-  },
-  '02': {
-    district: 'Ennore Port',
-    address: 'Kamarajar Port Road, Ennore',
-    lat: 13.2611,
-    lng: 80.3314,
-    drivers: [
-      { name: 'Shanmugam', truckType: '40ft Container Freightliner' },
-      { name: 'Sundaram', truckType: '32ft Heavy Trailer' },
-      { name: 'Kathirvel', truckType: '40ft Container Freightliner' },
-    ]
-  },
-  '04': {
-    district: 'Koyambedu',
-    address: 'Wholesale Market Road, Koyambedu',
-    lat: 13.0692,
-    lng: 80.1948,
-    drivers: [
-      { name: 'Ganesan', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Venkatesan', truckType: 'Refrigerated Reefer Truck' },
-      { name: 'Alagappan', truckType: '14ft Eicher Container' },
-    ]
-  },
-  '22': {
-    district: 'Tambaram',
-    address: 'GST Road, Tambaram, Chennai',
-    lat: 12.9249,
-    lng: 80.1000,
-    drivers: [
-      { name: 'Mani', truckType: '14ft Eicher Container' },
-      { name: 'Dharmalingam', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Boopathi', truckType: '32ft Heavy Trailer' },
-    ]
-  },
-  '38': {
-    district: 'Coimbatore',
-    address: 'Peelamedu Avinashi Road, Coimbatore',
-    lat: 11.0168,
-    lng: 76.9558,
-    drivers: [
-      { name: 'Senthil Kumar', truckType: 'Refrigerated Reefer Truck' },
-      { name: 'Ranganathan', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Muthukumar', truckType: '32ft Heavy Trailer' },
-      { name: 'Karuppusamy', truckType: 'Refrigerated Reefer Truck' },
-    ]
-  },
-  '58': {
-    district: 'Madurai',
-    address: 'Kappalur Ring Road, Madurai',
-    lat: 9.9252,
-    lng: 78.1198,
-    drivers: [
-      { name: 'Arumugam', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Pandian', truckType: '32ft Heavy Trailer' },
-      { name: 'Jeyachandran', truckType: 'Refrigerated Reefer Truck' },
-    ]
-  },
-  '45': {
-    district: 'Trichy',
-    address: 'Central Corridor, Tiruchirappalli',
-    lat: 10.7905,
-    lng: 78.7047,
-    drivers: [
-      { name: 'Ramasamy', truckType: '32ft Heavy Trailer' },
-      { name: 'Balakrishnan', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Anbazhagan', truckType: '40ft Container Freightliner' },
-    ]
-  },
-  '27': {
-    district: 'Salem',
-    address: 'Steel Plant Road, Salem',
-    lat: 11.6643,
-    lng: 78.1460,
-    drivers: [
-      { name: 'Karthik Raja', truckType: '14ft Eicher Container' },
-      { name: 'Selvaraj', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Gunasekaran', truckType: '32ft Heavy Trailer' },
-    ]
-  },
-  '72': {
-    district: 'Tirunelveli',
-    address: 'Gangaikondan SIPCOT, Tirunelveli',
-    lat: 8.7139,
-    lng: 77.7567,
-    drivers: [
-      { name: 'Muthu', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Ayyappan', truckType: '32ft Heavy Trailer' },
-      { name: 'Balamurugan', truckType: '14ft Eicher Container' },
-    ]
-  },
-  '23': {
-    district: 'Vellore',
-    address: 'Ranipet SIPCOT, Vellore',
-    lat: 12.9165,
-    lng: 79.1325,
-    drivers: [
-      { name: 'Perumal', truckType: '32ft Heavy Trailer' },
-      { name: 'Saravanan', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Rajendran', truckType: '14ft Eicher Container' },
-    ]
-  },
-  '39': {
-    district: 'Tiruppur',
-    address: 'Netaji Apparel Park, Tiruppur',
-    lat: 11.1085,
-    lng: 77.3411,
-    drivers: [
-      { name: 'Sakthivel', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Chinnasamy', truckType: '14ft Eicher Container' },
-      { name: 'Govindasamy', truckType: '32ft Heavy Trailer' },
-    ]
-  },
-  '33': {
-    district: 'Erode',
-    address: 'Perundurai SIPCOT, Erode',
-    lat: 11.3410,
-    lng: 77.7172,
-    drivers: [
-      { name: 'Palanisamy', truckType: 'Refrigerated Reefer Truck' },
-      { name: 'Narayanan', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Ravichandran', truckType: '14ft Eicher Container' },
-    ]
-  },
-  '69': {
-    district: 'Thoothukudi',
-    address: 'Harbour Estate CFS, Thoothukudi',
-    lat: 8.7642,
-    lng: 78.1348,
-    drivers: [
-      { name: 'Velu Pandian', truckType: '40ft Container Freightliner' },
-      { name: 'Subramanian', truckType: '32ft Heavy Trailer' },
-      { name: 'Chelladurai', truckType: '20ft Multi-Axle Truck' },
-    ]
-  },
-  '49': {
-    district: 'Thanjavur',
-    address: 'Pillaiyarpatti Delta Terminal, Thanjavur',
-    lat: 10.7870,
-    lng: 79.1378,
-    drivers: [
-      { name: 'Manickam', truckType: '14ft Eicher Container' },
-      { name: 'Elangovan', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Selvam', truckType: 'Refrigerated Reefer Truck' },
-    ]
-  },
-  '70': {
-    district: 'Hosur',
-    address: 'SIPCOT Phase-II, Hosur',
-    lat: 12.7409,
-    lng: 77.8253,
-    drivers: [
-      { name: 'Dhandapani', truckType: '32ft Heavy Trailer' },
-      { name: 'Thirunavukkarasu', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Sivakumar', truckType: '32ft Heavy Trailer' },
-    ]
-  },
-  '74': {
-    district: 'Nagercoil',
-    address: 'Kanyakumari Highway, Nagercoil',
-    lat: 8.1833,
-    lng: 77.4119,
-    drivers: [
-      { name: 'Vijayakumar', truckType: '20ft Multi-Axle Truck' },
-      { name: 'Ponraj', truckType: '14ft Eicher Container' },
-      { name: 'Kannan', truckType: 'Refrigerated Reefer Truck' },
-    ]
-  },
-};
+const RTO_DISTRICTS = [
+  { rto: '01', name: 'Chennai Port', lat: 13.0844, lng: 80.2936 },
+  { rto: '02', name: 'Ennore Port', lat: 13.2611, lng: 80.3314 },
+  { rto: '04', name: 'Koyambedu', lat: 13.0692, lng: 80.1948 },
+  { rto: '22', name: 'Tambaram', lat: 12.9249, lng: 80.1000 },
+  { rto: '38', name: 'Coimbatore', lat: 11.0168, lng: 76.9558 },
+  { rto: '58', name: 'Madurai', lat: 9.9252, lng: 78.1198 },
+  { rto: '45', name: 'Trichy', lat: 10.7905, lng: 78.7047 },
+  { rto: '27', name: 'Salem', lat: 11.6643, lng: 78.1460 },
+  { rto: '72', name: 'Tirunelveli', lat: 8.7139, lng: 77.7567 },
+  { rto: '23', name: 'Vellore', lat: 12.9165, lng: 79.1325 },
+  { rto: '39', name: 'Tiruppur', lat: 11.1085, lng: 77.3411 },
+  { rto: '33', name: 'Erode', lat: 11.3410, lng: 77.7172 },
+  { rto: '69', name: 'Thoothukudi', lat: 8.7642, lng: 78.1348 },
+  { rto: '49', name: 'Thanjavur', lat: 10.7870, lng: 79.1378 },
+  { rto: '70', name: 'Hosur', lat: 12.7409, lng: 77.8253 },
+  { rto: '74', name: 'Nagercoil', lat: 8.1833, lng: 77.4119 },
+];
 
 const SAMPLE_B2B_BUSINESSES = [
   { code: 'ABC123', name: 'ABC Global Logistics & Freight Ltd' },
@@ -198,57 +34,72 @@ const SAMPLE_B2B_BUSINESSES = [
   { code: 'MDU909', name: 'Madurai Spun Silk & Textiles' },
 ];
 
-export default function LoginPage() {
+export default function LandingLoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<'admin' | 'driver' | 'customer'>('customer');
-  const [username, setUsername] = useState('ABC Global Logistics & Freight Ltd');
-  const [password, setPassword] = useState('');
+  
+  // Selected portal state ('shipper' | 'driver' | 'dispatcher' | null)
+  const [selectedPortal, setSelectedPortal] = useState<'shipper' | 'driver' | 'dispatcher' | null>(null);
+
+  // Form inputs
+  const [shipperName, setShipperName] = useState('ABC Global Logistics & Freight Ltd');
   const [businessCode, setBusinessCode] = useState('ABC123');
+
+  const [selectedRTO, setSelectedRTO] = useState('01');
+  const [selectedUnit, setSelectedUnit] = useState('1001');
+  const [driverUsername, setDriverUsername] = useState('TN-01-1001');
+  const [driverPassword, setDriverPassword] = useState('drivertn01');
+
+  const [adminUsername, setAdminUsername] = useState('admin');
+  const [adminPassword, setAdminPassword] = useState('admin123');
+
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSelectRTO = (rto: string) => {
+    setSelectedRTO(rto);
+    setDriverUsername(`TN-${rto}-${selectedUnit}`);
+    setDriverPassword(`drivertn${rto}`);
+    setError('');
+  };
+
+  const handleSelectUnit = (unit: string) => {
+    setSelectedUnit(unit);
+    setDriverUsername(`TN-${selectedRTO}-${unit}`);
+    setError('');
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsSubmitting(true);
 
-    const cleanUser = username.trim();
-    const cleanPass = password.trim().toLowerCase();
+    setTimeout(() => {
+      if (selectedPortal === 'dispatcher') {
+        const cleanUser = adminUsername.trim().toUpperCase();
+        const cleanPass = adminPassword.trim().toLowerCase();
+        if (cleanUser === 'ADMIN' && (cleanPass === 'admin123' || cleanPass === 'admin')) {
+          localStorage.setItem('user_role', 'admin');
+          localStorage.setItem('user_name', 'Quantum Express Control Tower Dispatcher');
+          router.push('/admin');
+        } else {
+          setIsSubmitting(false);
+          setError('Invalid dispatcher credentials. Use "admin" / "admin123"');
+        }
+      } else if (selectedPortal === 'driver') {
+        const cleanUpperUser = driverUsername.trim().toUpperCase();
+        const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})-(\d{4})$/);
+        
+        if (!rtoMatch) {
+          setIsSubmitting(false);
+          setError('Username must follow pattern: TN-XX-1001 (e.g. TN-01-1001)');
+          return;
+        }
 
-    if (role === 'admin') {
-      if (cleanUser.toUpperCase() === 'ADMIN' && cleanPass === 'admin123') {
-        localStorage.setItem('user_role', 'admin');
-        localStorage.setItem('user_name', 'Quantum Express System Dispatcher');
-        router.push('/admin');
-      } else {
-        setError('Invalid dispatcher credentials. Hint: admin / admin123');
-      }
-    } else if (role === 'driver') {
-      const cleanUpperUser = cleanUser.toUpperCase();
-      const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})-(\d{4})$/);
-      
-      if (!rtoMatch) {
-        setError('Username must follow Quantum Express Driver format: TN-XX-1001 (e.g. TN-01-1001, TN-38-1002 - where last 4 digits is unique driver ID)');
-        return;
-      }
+        const rtoCode = rtoMatch[1];
+        const driverUnit = rtoMatch[2];
+        const matchedDistrict = RTO_DISTRICTS.find(d => d.rto === rtoCode) || RTO_DISTRICTS[0];
 
-      const rtoCode = rtoMatch[1];
-      const driverUnit = rtoMatch[2]; // e.g. "1001", "1002"
-      const expectedPassword = `drivertn${rtoCode}`.toLowerCase();
-
-      if (cleanPass === expectedPassword || cleanPass === 'driver123') {
-        const station = STATION_DRIVER_ROSTER[rtoCode];
-        const unitNum = parseInt(driverUnit);
-        const unitIdx = !isNaN(unitNum) ? unitNum - 1001 : 0;
-
-        const driverMeta = (station && station.drivers && station.drivers[unitIdx])
-          ? station.drivers[unitIdx]
-          : { name: `Driver #${driverUnit}`, truckType: '20ft Multi-Axle Truck' };
-
-        const stationAddress = station ? station.address : 'State Logistics Center';
-        const stationLat = station ? station.lat : 13.0692;
-        const stationLng = station ? station.lng : 80.1948;
-
-        // Exact Format: Name(address-username)
-        const driverName = `${driverMeta.name} (${stationAddress} - ${cleanUpperUser})`;
+        const driverName = `Driver #${driverUnit} (${matchedDistrict.name} Hub - ${cleanUpperUser})`;
         const vehicleId = `TN-${rtoCode}-TR-${driverUnit}`;
         const driverId = `TRK-${rtoCode}-${driverUnit}`;
 
@@ -258,337 +109,572 @@ export default function LoginPage() {
         localStorage.setItem('user_name', driverName);
         localStorage.setItem('vehicle_id', vehicleId);
         localStorage.setItem('rto_code', rtoCode);
-        localStorage.setItem('driver_hub', stationAddress);
-        localStorage.setItem('driver_lat', String(stationLat));
-        localStorage.setItem('driver_lng', String(stationLng));
-        localStorage.setItem('vehicle_type', driverMeta.truckType);
+        localStorage.setItem('driver_hub', `${matchedDistrict.name} Logistics Center`);
+        localStorage.setItem('driver_lat', String(matchedDistrict.lat));
+        localStorage.setItem('driver_lng', String(matchedDistrict.lng));
+        localStorage.setItem('vehicle_type', '32ft Heavy Trailer');
 
         router.push('/driver');
       } else {
-        setError(`Invalid driver credentials for ${cleanUpperUser}. Password must be "drivertn${rtoCode}"`);
+        // Shipper Portal
+        const cleanCode = businessCode.trim().toUpperCase();
+        const cleanName = shipperName.trim();
+
+        if (!cleanCode || cleanCode.length < 3) {
+          setIsSubmitting(false);
+          setError('Please provide a valid unique Business Code (e.g. ABC123)');
+          return;
+        }
+
+        if (!cleanName) {
+          setIsSubmitting(false);
+          setError('Please enter your Company / Shipper Business Name');
+          return;
+        }
+
+        localStorage.setItem('user_role', 'customer');
+        localStorage.setItem('user_name', cleanName);
+        localStorage.setItem('business_code', cleanCode);
+        router.push('/customer');
       }
-    } else {
-      // B2B Shipper login with unique Business Code (e.g. ABC123)
-      const cleanCode = businessCode.trim().toUpperCase();
-      
-      // Validate business code format: 3 letters + 3 numbers (e.g. ABC123) or at least 4 alphanumeric chars
-      if (!cleanCode || cleanCode.length < 4) {
-        setError('Please enter a valid unique Business Code (e.g. ABC123 - 3 Letters followed by 3 Numbers).');
-        return;
-      }
-
-      if (!cleanUser) {
-        setError('Please enter your Company / Shipper Business Name.');
-        return;
-      }
-
-      localStorage.setItem('user_role', 'customer');
-      localStorage.setItem('user_name', cleanUser);
-      localStorage.setItem('business_code', cleanCode);
-      router.push('/customer');
-    }
-  };
-
-  const handleQuickSelectRTO = (rto: string, unit: string = '1001') => {
-    setUsername(`TN-${rto}-${unit}`);
-    setPassword(`drivertn${rto}`);
-    setError('');
-  };
-
-  const handleQuickSelectBusiness = (b: { code: string; name: string }) => {
-    setBusinessCode(b.code);
-    setUsername(b.name);
-    setError('');
+    }, 300);
   };
 
   return (
-    <div className="flex-1 min-h-screen bg-zinc-950 flex flex-col justify-center items-center px-4 relative overflow-hidden font-sans">
-      {/* Background glowing effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
+    <div className="relative min-h-screen w-full bg-[#0c1220] text-white flex flex-col justify-between overflow-x-hidden select-none">
+      
+      {/* ==================================================================== */}
+      {/* BACKGROUND: Stylized Animated Tamil Nadu Logistics Network Map        */}
+      {/* ==================================================================== */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
+        
+        {/* Soft Radial Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] h-[800px] bg-gradient-to-tr from-amber-500/10 via-blue-900/10 to-transparent rounded-full blur-3xl opacity-60"></div>
+        
+        {/* SVG Map of Tamil Nadu & Logistics Corridors */}
+        <svg 
+          viewBox="0 0 1000 900" 
+          className="w-[100vw] max-w-[1500px] h-[75vh] opacity-40 transition-opacity duration-1000"
+          style={{ transform: 'translateY(-20px)' }}
+        >
+          <defs>
+            {/* Ambient Line Gradient */}
+            <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#e67e22" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f39c12" stopOpacity="0.15" />
+            </linearGradient>
+            
+            {/* Glowing Hub Filter */}
+            <filter id="hubGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-      <div className="w-full max-w-xl">
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-cyan-500/30 rounded-2xl mb-3 shadow-lg shadow-cyan-500/10">
-            <Truck className="w-8 h-8 text-cyan-400" />
+          {/* Stylized Tamil Nadu State Contour */}
+          <path
+            d="M 680 120 
+               Q 740 180 730 260 
+               Q 780 340 760 420 
+               Q 790 520 740 600 
+               Q 700 700 660 760 
+               Q 600 840 500 880 
+               Q 440 860 400 800 
+               Q 360 720 380 640 
+               Q 340 560 320 480 
+               Q 300 400 350 320 
+               Q 400 240 480 180 
+               Q 560 130 680 120 Z"
+            fill="rgba(26, 39, 68, 0.25)"
+            stroke="#1a2744"
+            strokeWidth="1.5"
+            strokeDasharray="4 4"
+          />
+
+          {/* Animated Connecting Logistics Corridor Lines */}
+          <g stroke="url(#routeGradient)" strokeWidth="1.5" fill="none">
+            {/* Chennai -> Ennore */}
+            <line x1="710" y1="180" x2="720" y2="140" />
+            {/* Chennai -> Koyambedu -> Tambaram */}
+            <line x1="710" y1="180" x2="685" y2="200" />
+            <line x1="685" y1="200" x2="670" y2="245" />
+            {/* Chennai -> Vellore -> Hosur */}
+            <line x1="710" y1="180" x2="580" y2="230" />
+            <line x1="580" y1="230" x2="480" y2="260" />
+            {/* Vellore -> Salem -> Erode -> Tiruppur -> Coimbatore */}
+            <line x1="580" y1="230" x2="520" y2="380" />
+            <line x1="520" y1="380" x2="470" y2="440" />
+            <line x1="470" y1="440" x2="420" y2="460" />
+            <line x1="420" y1="460" x2="370" y2="480" />
+            {/* Salem -> Trichy -> Thanjavur */}
+            <line x1="520" y1="380" x2="560" y2="510" />
+            <line x1="560" y1="510" x2="640" y2="520" />
+            {/* Trichy -> Madurai -> Tirunelveli -> Thoothukudi -> Nagercoil */}
+            <line x1="560" y1="510" x2="510" y2="630" />
+            <line x1="510" y1="630" x2="480" y2="760" />
+            <line x1="480" y1="760" x2="560" y2="750" />
+            <line x1="480" y1="760" x2="450" y2="850" />
+          </g>
+
+          {/* 16 Glowing Logistics Hub Dots with Wave Delays */}
+          {[
+            { name: 'Chennai Port', cx: 710, cy: 180, delay: '0s' },
+            { name: 'Ennore Port', cx: 720, cy: 140, delay: '0.2s' },
+            { name: 'Koyambedu', cx: 685, cy: 200, delay: '0.4s' },
+            { name: 'Tambaram', cx: 670, cy: 245, delay: '0.6s' },
+            { name: 'Vellore', cx: 580, cy: 230, delay: '0.8s' },
+            { name: 'Hosur', cx: 480, cy: 260, delay: '1.0s' },
+            { name: 'Salem', cx: 520, cy: 380, delay: '1.2s' },
+            { name: 'Erode', cx: 470, cy: 440, delay: '1.4s' },
+            { name: 'Tiruppur', cx: 420, cy: 460, delay: '1.6s' },
+            { name: 'Coimbatore', cx: 370, cy: 480, delay: '1.8s' },
+            { name: 'Trichy', cx: 560, cy: 510, delay: '2.0s' },
+            { name: 'Thanjavur', cx: 640, cy: 520, delay: '2.2s' },
+            { name: 'Madurai', cx: 510, cy: 630, delay: '2.4s' },
+            { name: 'Thoothukudi', cx: 560, cy: 750, delay: '2.6s' },
+            { name: 'Tirunelveli', cx: 480, cy: 760, delay: '2.8s' },
+            { name: 'Nagercoil', cx: 450, cy: 850, delay: '3.0s' },
+          ].map((hub, idx) => (
+            <g key={idx}>
+              {/* Outer Pulse Ring */}
+              <circle
+                cx={hub.cx}
+                cy={hub.cy}
+                r="10"
+                fill="none"
+                stroke="#e67e22"
+                strokeWidth="1.5"
+                opacity="0.6"
+                className="qe-hub-dot"
+                style={{ animationDelay: hub.delay }}
+              />
+              {/* Center Dot */}
+              <circle
+                cx={hub.cx}
+                cy={hub.cy}
+                r="4"
+                fill="#f39c12"
+                filter="url(#hubGlow)"
+              />
+              {/* Label */}
+              <text
+                x={hub.cx + 8}
+                y={hub.cy + 3}
+                fill="#9ca3af"
+                fontSize="10"
+                fontFamily="Inter, sans-serif"
+                fontWeight="500"
+                opacity="0.8"
+              >
+                {hub.name}
+              </text>
+            </g>
+          ))}
+        </svg>
+
+        {/* Bottom soft gradient fade */}
+        <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#0c1220] to-transparent"></div>
+      </div>
+
+      {/* ==================================================================== */}
+      {/* TOP BAR: Fixed Header                                                */}
+      {/* ==================================================================== */}
+      <header className="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md bg-[#0c1220]/60">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold tracking-tight text-white">QUANTUM</span>
+            <span className="text-2xl font-bold tracking-tight text-[#f39c12]">EXPRESS</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-            QUANTUM<span className="text-cyan-400">EXPRESS</span>
-          </h1>
-          <p className="mt-1 text-zinc-400 text-xs tracking-wide">
+          <span className="text-xs text-gray-400 font-medium tracking-wide mt-0.5">
             Enterprise B2B Freight Orchestration & State Logistics Center Platform
-          </p>
+          </span>
         </div>
 
-        {/* Card */}
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-7 backdrop-blur-md shadow-2xl space-y-5">
-          {/* Tab Selector */}
-          <div className="grid grid-cols-3 gap-2 p-1.5 bg-zinc-950 border border-zinc-800 rounded-xl">
-            <button
-              onClick={() => { setRole('customer'); setError(''); setUsername('ABC Global Logistics & Freight Ltd'); setBusinessCode('ABC123'); }}
-              className={`flex flex-col items-center justify-center py-2.5 rounded-lg text-xs font-bold transition-all ${
-                role === 'customer'
-                  ? 'bg-cyan-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-              }`}
-            >
-              <Building2 className="w-4 h-4 mb-1" />
-              B2B Shipper
-            </button>
-            <button
-              onClick={() => { setRole('driver'); setError(''); setUsername('TN-01-0001'); setPassword('drivertn01'); }}
-              className={`flex flex-col items-center justify-center py-2.5 rounded-lg text-xs font-bold transition-all ${
-                role === 'driver'
-                  ? 'bg-cyan-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-              }`}
-            >
-              <Truck className="w-4 h-4 mb-1" />
-              Heavy Truck Driver
-            </button>
-            <button
-              onClick={() => { setRole('admin'); setError(''); setUsername('admin'); setPassword('admin123'); }}
-              className={`flex flex-col items-center justify-center py-2.5 rounded-lg text-xs font-bold transition-all ${
-                role === 'admin'
-                  ? 'bg-cyan-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4 mb-1" />
-              Dispatcher Tower
-            </button>
+        <div className="flex items-center gap-4 text-xs text-gray-400 font-medium">
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-[#e67e22] animate-ping"></span>
+            <span>16 State Logistics & Warehousing Hubs</span>
           </div>
+          <span className="text-gray-500">© 2026</span>
+        </div>
+      </header>
 
-          {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
+      {/* ==================================================================== */}
+      {/* HERO / PORTAL SELECTION / LOGIN TRANSITION                           */}
+      {/* ==================================================================== */}
+      <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-12">
+        
+        {/* VIEW 1: 3 Glass Portal Cards (Initial State) */}
+        {!selectedPortal && (
+          <div className="w-full max-w-[1240px] flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
             
-            {/* B2B Shipper Column */}
-            {role === 'customer' && (
-              <div className="space-y-4">
-                
-                {/* Business Code Quick Select Chips */}
-                <div className="p-3 bg-zinc-950/80 border border-zinc-800 rounded-2xl space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400 uppercase">
-                    <span className="flex items-center gap-1.5 text-cyan-400">
-                      <KeyRound className="w-3.5 h-3.5" /> Sample Business Accounts:
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    {SAMPLE_B2B_BUSINESSES.map(b => (
-                      <button
-                        key={b.code}
-                        type="button"
-                        onClick={() => handleQuickSelectBusiness(b)}
-                        className={`p-2 rounded-xl border text-left transition-all ${
-                          businessCode === b.code
-                            ? 'bg-cyan-500 text-zinc-950 border-cyan-400 font-bold shadow-sm'
-                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
-                        }`}
-                      >
-                        <span className="block font-mono font-extrabold text-xs">{b.code}</span>
-                        <span className="block text-[10px] truncate">{b.name.split(' ')[0]}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div className="text-center mb-12">
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#f39c12] bg-[#f39c12]/10 border border-[#f39c12]/20 px-3 py-1 rounded-full">
+                Tamil Nadu Heavy Freight Gateway
+              </span>
+              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mt-3">
+                Select Your Enterprise Portal
+              </h1>
+              <p className="text-sm text-gray-400 mt-2 max-w-xl mx-auto">
+                Connect directly with ports, commercial fleet terminals, and automated dispatch across the state.
+              </p>
+            </div>
 
+            {/* 3 Dark Glass Cards Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+              
+              {/* Card 1: B2B Shipper */}
+              <div 
+                onClick={() => setSelectedPortal('shipper')}
+                className="group relative bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-2xl border border-white/10 hover:border-[#e67e22]/50 rounded-2xl p-8 h-[300px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 hover:shadow-[0_0_40px_rgba(230,126,34,0.25)]"
+              >
                 <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1">
-                    Company / Shipper Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. ABC Global Logistics & Freight Ltd"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white"
-                  />
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300">
+                    <Building2 className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mt-6 group-hover:text-[#f39c12] transition-colors">
+                    B2B Shipper
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                    Book commercial freight, get dispatcher quotations, and manage warehouse staging across 16 state hubs.
+                  </p>
                 </div>
 
+                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                  <span className="text-sm font-semibold text-[#e67e22] flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform">
+                    Enter Portal <ArrowRight className="w-4 h-4" />
+                  </span>
+                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-mono">CFS & Yards</span>
+                </div>
+
+                {/* Bottom Decorative Gradient Line */}
+                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/40 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
+              </div>
+
+              {/* Card 2: Heavy Truck Driver */}
+              <div 
+                onClick={() => setSelectedPortal('driver')}
+                className="group relative bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-2xl border border-white/10 hover:border-[#e67e22]/50 rounded-2xl p-8 h-[300px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 hover:shadow-[0_0_40px_rgba(230,126,34,0.25)]"
+              >
                 <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1 flex items-center justify-between">
-                    <span>Unique Business Code / Password</span>
-                    <span className="text-zinc-500 font-mono text-[10px] uppercase">(Pattern: ABC123)</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="ABC123"
-                    value={businessCode}
-                    onChange={(e) => setBusinessCode(e.target.value.toUpperCase())}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-mono font-bold tracking-wider focus:outline-none focus:border-cyan-500 text-cyan-400 uppercase"
-                  />
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300">
+                    <Truck className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mt-6 group-hover:text-[#f39c12] transition-colors">
+                    Heavy Truck Driver
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                    Receive direct load dispatches, view highway routes, track trip earnings, and submit digital POD proofs.
+                  </p>
                 </div>
 
-                <div className="p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-[11px] text-zinc-400 flex items-center gap-2">
-                  <Lock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span>Your quotations and billing records are isolated by this unique Business Code (e.g. <strong>{businessCode || 'ABC123'}</strong>).</span>
+                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                  <span className="text-sm font-semibold text-[#e67e22] flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform">
+                    Enter Portal <ArrowRight className="w-4 h-4" />
+                  </span>
+                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-mono">RTO Network</span>
                 </div>
+
+                {/* Bottom Decorative Gradient Line */}
+                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/40 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
+              </div>
+
+              {/* Card 3: Dispatcher Control Tower */}
+              <div 
+                onClick={() => setSelectedPortal('dispatcher')}
+                className="group relative bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-2xl border border-white/10 hover:border-[#e67e22]/50 rounded-2xl p-8 h-[300px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 hover:shadow-[0_0_40px_rgba(230,126,34,0.25)]"
+              >
+                <div>
+                  <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300">
+                    <Radio className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mt-6 group-hover:text-[#f39c12] transition-colors">
+                    Dispatcher Tower
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                    Full command center to monitor live fleet telemetry, approve toll quotations, assign drivers, and resolve incidents.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                  <span className="text-sm font-semibold text-[#e67e22] flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform">
+                    Enter Portal <ArrowRight className="w-4 h-4" />
+                  </span>
+                  <span className="text-[11px] text-gray-500 uppercase tracking-wider font-mono">State Admin</span>
+                </div>
+
+                {/* Bottom Decorative Gradient Line */}
+                <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/40 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* VIEW 2: Slide-in Dark Glass Login Form */}
+        {selectedPortal && (
+          <div className="w-full max-w-[500px] bg-white/[0.05] backdrop-blur-2xl border border-white/10 rounded-2xl p-8 md:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-400">
+            
+            {/* Back Button */}
+            <button 
+              onClick={() => { setSelectedPortal(null); setError(''); }}
+              className="text-xs font-semibold text-[#e67e22] hover:text-[#f39c12] flex items-center gap-1.5 mb-6 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" /> Return to Portals
+            </button>
+
+            {/* Portal Title */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22]">
+                {selectedPortal === 'shipper' && <Building2 className="w-5 h-5" />}
+                {selectedPortal === 'driver' && <Truck className="w-5 h-5" />}
+                {selectedPortal === 'dispatcher' && <Radio className="w-5 h-5" />}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  {selectedPortal === 'shipper' && 'B2B Shipper Sign In'}
+                  {selectedPortal === 'driver' && 'Heavy Truck Driver Sign In'}
+                  {selectedPortal === 'dispatcher' && 'Dispatcher Control Tower'}
+                </h2>
+                <p className="text-xs text-gray-400">
+                  {selectedPortal === 'shipper' && 'Access freight booking & quotation bills'}
+                  {selectedPortal === 'driver' && 'Select your TN District RTO & Station Unit'}
+                  {selectedPortal === 'dispatcher' && 'State Logistics Command Center credentials'}
+                </p>
+              </div>
+            </div>
+
+            {/* Error banner */}
+            {error && (
+              <div className="mb-6 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium flex items-center gap-2">
+                <span>⚠️</span> {error}
               </div>
             )}
 
-            {/* Heavy Truck Driver Column */}
-            {role === 'driver' && (
-              <div className="space-y-4">
-                
-                {/* RTO Quick Selection Chips */}
-                <div className="p-3 bg-zinc-950/80 border border-zinc-800 rounded-2xl space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-zinc-400 uppercase">
-                    <span className="flex items-center gap-1.5 text-cyan-400">
-                      <KeyRound className="w-3.5 h-3.5" /> Select District / RTO Quick Login:
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 text-[11px]">
-                    {[
-                      { rto: '01', name: 'Chennai Port' },
-                      { rto: '02', name: 'Ennore Port' },
-                      { rto: '04', name: 'Koyambedu' },
-                      { rto: '22', name: 'Tambaram' },
-                      { rto: '38', name: 'Coimbatore' },
-                      { rto: '58', name: 'Madurai' },
-                      { rto: '45', name: 'Trichy' },
-                      { rto: '27', name: 'Salem' },
-                      { rto: '72', name: 'Tirunelveli' },
-                      { rto: '23', name: 'Vellore' },
-                      { rto: '39', name: 'Tiruppur' },
-                      { rto: '33', name: 'Erode' },
-                      { rto: '69', name: 'Thoothukudi' },
-                      { rto: '49', name: 'Thanjavur' },
-                      { rto: '70', name: 'Hosur' },
-                      { rto: '74', name: 'Nagercoil' },
-                    ].map(item => (
-                      <button
-                        key={item.rto}
-                        type="button"
-                        onClick={() => handleQuickSelectRTO(item.rto, '1001')}
-                        className={`p-1.5 rounded-lg border text-center font-mono font-bold transition-all ${
-                          username.startsWith(`TN-${item.rto}`)
-                            ? 'bg-cyan-500 text-zinc-950 border-cyan-400 shadow-sm'
-                            : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
-                        }`}
-                        title={item.name}
-                      >
-                        <span className="block text-[10px] uppercase">{item.rto}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-zinc-400 text-xs font-semibold">
-                      Truck Driver Username <span className="text-zinc-500 font-mono text-[10px]">(Pattern: TN-XX-1001)</span>
+            <form onSubmit={handleLogin} className="space-y-5">
+              
+              {/* SHIPPER FORM FIELDS */}
+              {selectedPortal === 'shipper' && (
+                <>
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                      Company / Shipper Name
                     </label>
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-zinc-500">Unit:</span>
-                      {['1001', '1002', '1003'].map(unit => {
-                        const currentRto = username.split('-')[1] || '01';
+                    <input
+                      type="text"
+                      value={shipperName}
+                      onChange={(e) => setShipperName(e.target.value)}
+                      placeholder="e.g. ABC Global Logistics & Freight Ltd"
+                      className="qe-glass-input"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                      Unique Business Code
+                    </label>
+                    <input
+                      type="text"
+                      value={businessCode}
+                      onChange={(e) => setBusinessCode(e.target.value.toUpperCase())}
+                      placeholder="e.g. ABC123"
+                      className="qe-glass-input font-mono uppercase"
+                      required
+                    />
+                  </div>
+
+                  {/* Quick Select Shipper Demo Accounts */}
+                  <div>
+                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                      Quick Business Select
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {SAMPLE_B2B_BUSINESSES.map((b) => (
+                        <button
+                          key={b.code}
+                          type="button"
+                          onClick={() => {
+                            setBusinessCode(b.code);
+                            setShipperName(b.name);
+                          }}
+                          className={`p-2 rounded-lg text-left text-xs border transition-all ${
+                            businessCode === b.code
+                              ? 'bg-amber-500/20 border-[#e67e22] text-amber-200'
+                              : 'bg-white/[0.02] border-white/5 text-gray-400 hover:bg-white/[0.06]'
+                          }`}
+                        >
+                          <div className="font-bold font-mono text-[11px]">{b.code}</div>
+                          <div className="text-[10px] truncate">{b.name}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* DRIVER FORM FIELDS */}
+              {selectedPortal === 'driver' && (
+                <>
+                  {/* District RTO 4x4 Grid */}
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-2">
+                      Select District RTO (16 Hubs)
+                    </label>
+                    <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                      {RTO_DISTRICTS.map((dist) => {
+                        const isSelected = selectedRTO === dist.rto;
                         return (
                           <button
-                            key={unit}
+                            key={dist.rto}
                             type="button"
-                            onClick={() => handleQuickSelectRTO(currentRto, unit)}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border transition-all ${
-                              username.endsWith(unit)
-                                ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
-                                : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:text-zinc-300'
+                            onClick={() => handleSelectRTO(dist.rto)}
+                            className={`p-2 rounded-lg text-center transition-all border ${
+                              isSelected
+                                ? 'bg-[#e67e22] border-[#e67e22] text-white shadow-lg shadow-amber-500/30'
+                                : 'bg-white/[0.04] border-white/10 text-gray-300 hover:bg-white/[0.08]'
                             }`}
                           >
-                            #{unit}
+                            <div className="text-[11px] font-mono font-bold">TN-{dist.rto}</div>
+                            <div className="text-[9px] truncate opacity-80">{dist.name}</div>
                           </button>
                         );
                       })}
                     </div>
                   </div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="TN-01-1001"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-cyan-500 text-white"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1">
-                    Password <span className="text-zinc-500 font-mono text-[11px]">(Format: drivertnXX)</span>
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="drivertn01"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-cyan-500 text-white"
-                  />
-                </div>
+                  {/* Unit Selector Pills */}
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                      Station Truck Unit
+                    </label>
+                    <div className="flex gap-2">
+                      {['1001', '1002', '1003', '1004'].map((unit) => (
+                        <button
+                          key={unit}
+                          type="button"
+                          onClick={() => handleSelectUnit(unit)}
+                          className={`flex-1 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${
+                            selectedUnit === unit
+                              ? 'bg-amber-500/20 border-[#e67e22] text-amber-300'
+                              : 'bg-white/[0.03] border-white/10 text-gray-400 hover:bg-white/[0.06]'
+                          }`}
+                        >
+                          #{unit}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="flex items-center justify-between text-[11px] text-zinc-500 px-1">
-                  <span className="flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5 text-zinc-600" /> Pattern: <code className="text-zinc-400">username: TN-XX-1001</code>
-                  </span>
-                  <span>Password: <code className="text-cyan-400">drivertnXX</code></span>
-                </div>
-              </div>
-            )}
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                      Username (Vehicle Badge)
+                    </label>
+                    <input
+                      type="text"
+                      value={driverUsername}
+                      onChange={(e) => setDriverUsername(e.target.value.toUpperCase())}
+                      className="qe-glass-input font-mono"
+                      required
+                    />
+                  </div>
 
-            {/* Dispatcher Column */}
-            {role === 'admin' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1">Dispatcher Username</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="admin"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-zinc-400 text-xs font-semibold mb-1">Password</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="admin123"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white"
-                  />
-                </div>
-                <div className="text-[11px] text-zinc-500">
-                  Default Dispatcher Credentials: <code className="text-cyan-400">admin / admin123</code>
-                </div>
-              </div>
-            )}
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                      Password / Security PIN
+                    </label>
+                    <input
+                      type="password"
+                      value={driverPassword}
+                      onChange={(e) => setDriverPassword(e.target.value)}
+                      placeholder="e.g. drivertn01 or driver123"
+                      className="qe-glass-input font-mono"
+                      required
+                    />
+                  </div>
+                </>
+              )}
 
-            {error && (
-              <div className="text-rose-400 text-xs bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl">
-                {error}
-              </div>
-            )}
+              {/* DISPATCHER FORM FIELDS */}
+              {selectedPortal === 'dispatcher' && (
+                <>
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                      Dispatcher Admin Username
+                    </label>
+                    <input
+                      type="text"
+                      value={adminUsername}
+                      onChange={(e) => setAdminUsername(e.target.value)}
+                      className="qe-glass-input font-mono"
+                      required
+                    />
+                  </div>
 
-            <button
-              type="submit"
-              className="w-full mt-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-zinc-950 font-black py-3 rounded-xl text-sm transition-all shadow-lg shadow-cyan-500/10 flex items-center justify-center gap-2 group"
-            >
-              Sign In to Command Portal
-              <ArrowRight className="w-4 h-4 text-zinc-950 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </form>
-        </div>
+                  <div>
+                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                      Command Center Password
+                    </label>
+                    <input
+                      type="password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      className="qe-glass-input font-mono"
+                      required
+                    />
+                  </div>
 
-        {/* Footer info */}
-        <div className="mt-6 text-center text-zinc-600 text-[11px]">
-          Quantum Express Business Logistics Platform &copy; 2026. 16 State Logistics & Warehousing Hubs.
-        </div>
-      </div>
+                  {/* Demo Helper Button */}
+                  <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg flex items-center justify-between text-xs text-amber-200">
+                    <span>Default demo: <strong>admin</strong> / <strong>admin123</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdminUsername('admin');
+                        setAdminPassword('admin123');
+                      }}
+                      className="px-2.5 py-1 bg-amber-500 text-white rounded font-medium hover:bg-amber-600 transition-colors"
+                    >
+                      Fill Credentials
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-[#e67e22] to-[#f39c12] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <span>Authenticating...</span>
+                ) : (
+                  <>
+                    <span>Sign In to Command Portal</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+            </form>
+
+          </div>
+        )}
+
+      </main>
+
+      {/* ==================================================================== */}
+      {/* FOOTER                                                               */}
+      {/* ==================================================================== */}
+      <footer className="relative z-10 w-full px-8 py-4 text-center text-xs text-gray-500 border-t border-white/5 backdrop-blur-md bg-[#0c1220]/60">
+        Quantum Express Business Logistics Platform © 2026. 16 State Logistics & Warehousing Hubs.
+      </footer>
+
     </div>
   );
 }

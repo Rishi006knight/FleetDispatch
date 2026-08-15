@@ -265,10 +265,11 @@ export default function AdminDashboard() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-extrabold tracking-wide text-white">TAMIL NADU FREIGHT CONTROL TOWER</span>
-              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold px-2 py-0.5 rounded-full">16 Terminals & Ports</span>
+              <span className="text-base font-black tracking-wide text-white">QUANTUM<span className="text-cyan-400">EXPRESS</span></span>
+              <span className="text-xs font-semibold text-zinc-300 border-l border-zinc-700 pl-2">Dispatcher Control Tower</span>
+              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold px-2 py-0.5 rounded-full">16 State Logistics Hubs</span>
             </div>
-            <span className="text-xs text-zinc-400">Dispatcher Command Station • Source Terminal Truck Matching</span>
+            <span className="text-xs text-zinc-400">Enterprise B2B Freight & State Warehousing Logistics Platform</span>
           </div>
         </div>
 

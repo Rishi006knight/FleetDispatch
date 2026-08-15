@@ -260,7 +260,8 @@ export default function DriverPortal() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-extrabold text-white">Commercial Truck Portal</h1>
+              <h1 className="text-base font-black text-white">QUANTUM<span className="text-cyan-400">EXPRESS</span></h1>
+              <span className="text-xs font-semibold text-zinc-300 border-l border-zinc-700 pl-2">Commercial Truck Fleet</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
                 {driver?.vehicleId || 'TN-01-TR-0001'}
               </span>

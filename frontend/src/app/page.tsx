@@ -142,7 +142,7 @@ export default function LoginPage() {
             QUANTUM<span className="text-cyan-400">EXPRESS</span>
           </h1>
           <p className="mt-1 text-zinc-400 text-xs tracking-wide">
-            Tamil Nadu Commercial Fleet & Warehousing Logistics Management System
+            Enterprise B2B Freight Orchestration & State Logistics Center Platform
           </p>
         </div>
 
@@ -389,7 +389,7 @@ export default function LoginPage() {
 
         {/* Footer info */}
         <div className="mt-6 text-center text-zinc-600 text-[11px]">
-          QuantumExpress Tamil Nadu Logistics Network &copy; 2026. 16 Terminals & Ports.
+          Quantum Express Business Logistics Platform &copy; 2026. 16 State Logistics & Warehousing Hubs.
         </div>
       </div>
     </div>

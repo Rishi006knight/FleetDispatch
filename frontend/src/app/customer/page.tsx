@@ -242,12 +242,13 @@ export default function CustomerPortal() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-extrabold text-white tracking-wide">Tamil Nadu B2B Freight & Warehousing</h1>
+              <h1 className="text-base font-black text-white tracking-wide">QUANTUM<span className="text-cyan-400">EXPRESS</span></h1>
+              <span className="text-xs font-semibold text-zinc-300 border-l border-zinc-700 pl-2">B2B Shipper Portal</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold font-mono">
                 Code: {businessCode}
               </span>
             </div>
-            <span className="block text-xs text-zinc-400">Shipper Account: {customerName}</span>
+            <span className="block text-xs text-zinc-400">Shipper Account: {customerName} • State Logistics & Warehousing Grid</span>
           </div>
         </div>
         

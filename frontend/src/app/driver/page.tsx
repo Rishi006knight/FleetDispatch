@@ -63,38 +63,44 @@ export default function DriverPortal() {
   }, []);
 
   const fetchDriverProfile = async (id: string) => {
+    const storedName = localStorage.getItem('user_name') || 'Heavy Truck Driver';
+    const storedVehicleId = localStorage.getItem('vehicle_id') || 'TN-01-TR-0001';
+    const storedLat = parseFloat(localStorage.getItem('driver_lat') || '13.0844');
+    const storedLng = parseFloat(localStorage.getItem('driver_lng') || '80.2936');
+    const storedVehicleType = localStorage.getItem('vehicle_type') || '32ft Heavy Trailer';
+
     try {
       const res = await axios.get(`${API_URL}/api/drivers`);
-      const matched = res.data.find((d: any) => d.driverId === id);
+      const matched = res.data.find((d: any) => d.driverId === id || d.vehicleId === storedVehicleId);
       
       if (matched) {
         setDriver(matched);
         const ordersRes = await axios.get(`${API_URL}/api/orders`);
-        const active = ordersRes.data.find((o: any) => o.driverId === id && !['completed', 'failed', 'rejected'].includes(o.status));
+        const active = ordersRes.data.find((o: any) => (o.driverId === matched.driverId || o.driverId === id) && !['completed', 'failed', 'rejected'].includes(o.status));
         if (active) {
           setActiveOrder(active);
         }
       } else {
-        // Register heavy truck driver
+        // Register heavy truck driver dynamically based on RTO
         const regRes = await axios.post(`${API_URL}/api/drivers`, {
-          name: 'Murugan (Express Freightliner)',
+          name: storedName,
           phone: '9840112233',
-          vehicleId: 'TN-01-TR-8841',
-          vehicleType: '32ft Heavy Trailer',
-          initialLat: 13.0844,
-          initialLng: 80.2936
+          vehicleId: storedVehicleId,
+          vehicleType: storedVehicleType,
+          initialLat: storedLat,
+          initialLng: storedLng
         });
         setDriver(regRes.data);
       }
     } catch (err) {
       console.warn('Backend loading, setting local heavy truck mock.');
       setDriver({
-        driverId: 'TRK-101',
-        name: 'Murugan (Express Freightliner)',
-        vehicleType: '32ft Heavy Trailer',
-        vehicleId: 'TN-01-TR-8841',
+        driverId: id,
+        name: storedName,
+        vehicleType: storedVehicleType,
+        vehicleId: storedVehicleId,
         status: 'online',
-        currentLocation: { lat: 13.0844, lng: 80.2936 },
+        currentLocation: { lat: storedLat, lng: storedLng },
         rating: 4.92,
         reliability: 0.98,
         earnings: 48500,

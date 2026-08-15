@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import io from 'socket.io-client';
 import axios from 'axios';
+import dynamic from 'next/dynamic';
+
+const TrackingMap = dynamic(() => import('../components/Map'), { ssr: false });
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -387,6 +390,24 @@ export default function DriverPortal() {
                 <span className="text-[10px] text-rose-400 font-bold uppercase block mb-1">Destination Terminal / CFS</span>
                 <p className="font-semibold text-white">{activeOrder.drop?.address}</p>
               </div>
+            </div>
+
+            {/* Real Road Network Map Container */}
+            <div className="bg-zinc-950/90 border border-zinc-800 rounded-2xl p-3 h-[320px] relative overflow-hidden shadow-inner">
+              <TrackingMap 
+                pickupLocation={activeOrder.pickup}
+                dropLocation={activeOrder.drop}
+                driverLocation={driver?.currentLocation}
+                routeCoordinates={activeOrder.routeCoordinates || []}
+                routeInfo={{
+                  originName: activeOrder.pickup?.address,
+                  destName: activeOrder.drop?.address,
+                  distanceKm: activeOrder.distanceKm,
+                  status: activeOrder.status,
+                  vehicleId: driver?.vehicleId
+                }}
+                showWarehouses={true}
+              />
             </div>
 
             {/* In-Transit Control */}

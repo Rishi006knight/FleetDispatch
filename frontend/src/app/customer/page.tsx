@@ -534,6 +534,13 @@ export default function CustomerPortal() {
               dropLocation={selectedOrder?.drop}
               driverLocation={mapDriverLoc}
               routeCoordinates={selectedOrder?.routeCoordinates || []}
+              routeInfo={{
+                originName: selectedOrder?.pickup?.address,
+                destName: selectedOrder?.drop?.address,
+                distanceKm: selectedOrder?.distanceKm,
+                status: selectedOrder?.status,
+                vehicleId: activeDriverObj?.vehicleId
+              }}
               otherDrivers={drivers}
               showWarehouses={true}
             />

@@ -585,11 +585,18 @@ export default function AdminDashboard() {
               <span>Tamil Nadu Live Logistics Grid (16 Warehouses & Port CFS)</span>
             </div>
             
-            <Map 
+            <TrackingMap 
               pickupLocation={selectedOrder?.pickup}
               dropLocation={selectedOrder?.drop}
               driverLocation={activeDriverObj?.currentLocation}
               routeCoordinates={selectedOrder?.routeCoordinates || []}
+              routeInfo={{
+                originName: selectedOrder?.pickup?.address,
+                destName: selectedOrder?.drop?.address,
+                distanceKm: selectedOrder?.distanceKm,
+                status: selectedOrder?.status,
+                vehicleId: activeDriverObj?.vehicleId
+              }}
               otherDrivers={drivers}
               showWarehouses={true}
             />

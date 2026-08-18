@@ -168,25 +168,38 @@ export default function LandingLoginPage() {
     <div className="relative min-h-screen w-full bg-[#0c1220] text-white flex flex-col justify-between overflow-x-hidden select-none">
       
       {/* ==================================================================== */}
-      {/* BACKGROUND: High-Resolution Tamil Nadu Logistics Map & Ambient Layer */}
+      {/* BACKGROUND: Dynamic Ken-Burns Map, Cyber-Grid & Ambient Light Layer   */}
       {/* ==================================================================== */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Deep Slate Fallback Layer */}
+        <div className="absolute inset-0 bg-[#0c1220]" />
+
+        {/* Dynamic Slow Ken-Burns Animated Tamil Nadu Corridor Visual */}
         <div 
-          className="absolute inset-0 bg-center bg-cover bg-no-repeat opacity-85 scale-100 transition-transform duration-1000"
+          className="absolute inset-[-5%] bg-center bg-cover bg-no-repeat opacity-80 animate-kenburns will-change-transform"
           style={{ backgroundImage: `url('/images/tn_logistics_bg.jpg')` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0c1220]/70 via-transparent to-[#0c1220]/85" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(12,18,32,0.15)_0%,rgba(12,18,32,0.75)_100%)]" />
+
+        {/* Cyber Logistics Grid Overlay */}
+        <div className="absolute inset-0 radar-grid opacity-50" />
+
+        {/* Ambient Glowing Light Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-[550px] h-[550px] bg-amber-500/12 rounded-full blur-[140px] pointer-events-none animate-pulse-glow" />
+        <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-orange-600/12 rounded-full blur-[120px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '3.5s' }} />
+
+        {/* Contrast Gradient & Vignette Overlays for Crisp Text Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0c1220]/80 via-[#0c1220]/35 to-[#0c1220]/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(12,18,32,0.1)_0%,rgba(12,18,32,0.85)_100%)]" />
       </div>
 
       {/* ==================================================================== */}
       {/* TOP BAR: Fixed Header                                                */}
       {/* ==================================================================== */}
-      <header className="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-white/10 backdrop-blur-xl bg-[#0c1220]/60">
+      <header className="relative z-10 w-full px-8 py-6 flex items-center justify-between border-b border-white/10 backdrop-blur-2xl bg-[#0c1220]/70 shadow-lg">
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight text-white">QUANTUM</span>
-            <span className="text-2xl font-bold tracking-tight text-[#f39c12]">EXPRESS</span>
+            <span className="text-2xl font-bold tracking-tight text-white drop-shadow-sm">QUANTUM</span>
+            <span className="text-2xl font-bold tracking-tight text-[#f39c12] drop-shadow-sm">EXPRESS</span>
           </div>
           <span className="text-xs text-gray-400 font-medium tracking-wide mt-0.5">
             Enterprise B2B Freight Orchestration & State Logistics Center Platform
@@ -194,7 +207,7 @@ export default function LandingLoginPage() {
         </div>
 
         <div className="flex items-center gap-4 text-xs text-gray-400 font-medium">
-          <div className="flex items-center gap-2 bg-[#0c1220]/70 border border-amber-500/30 px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-lg">
+          <div className="flex items-center gap-2 bg-[#0c1220]/80 border border-amber-500/30 px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-lg">
             <span className="w-2 h-2 rounded-full bg-[#e67e22] animate-ping"></span>
             <span className="text-amber-300 font-semibold">16 State Logistics Hubs Active</span>
           </div>
@@ -229,7 +242,7 @@ export default function LandingLoginPage() {
               {/* Card 1: B2B Shipper */}
               <div 
                 onClick={() => { setSelectedPortal('shipper'); setError(''); }}
-                className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
+                className="group relative bg-[#0c1220]/55 hover:bg-[#0c1220]/75 backdrop-blur-2xl border border-white/15 hover:border-[#e67e22]/80 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] hover:shadow-[0_0_40px_rgba(230,126,34,0.4)] overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent"
               >
                 <div>
                   <div className="w-14 h-14 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300 shadow-md">
@@ -256,7 +269,7 @@ export default function LandingLoginPage() {
               {/* Card 2: Heavy Truck Driver */}
               <div 
                 onClick={() => { setSelectedPortal('driver'); setError(''); }}
-                className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
+                className="group relative bg-[#0c1220]/55 hover:bg-[#0c1220]/75 backdrop-blur-2xl border border-white/15 hover:border-[#e67e22]/80 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] hover:shadow-[0_0_40px_rgba(230,126,34,0.4)] overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent"
               >
                 <div>
                   <div className="w-14 h-14 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300 shadow-md">
@@ -283,7 +296,7 @@ export default function LandingLoginPage() {
               {/* Card 3: Dispatcher Control Tower */}
               <div 
                 onClick={() => { setSelectedPortal('dispatcher'); setError(''); }}
-                className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
+                className="group relative bg-[#0c1220]/55 hover:bg-[#0c1220]/75 backdrop-blur-2xl border border-white/15 hover:border-[#e67e22]/80 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] hover:shadow-[0_0_40px_rgba(230,126,34,0.4)] overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent"
               >
                 <div>
                   <div className="w-14 h-14 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#e67e22] group-hover:scale-110 transition-transform duration-300 shadow-md">
@@ -314,7 +327,7 @@ export default function LandingLoginPage() {
 
         {/* VIEW 2: Slide-in Dark Glass Login Form */}
         {selectedPortal && (
-          <div className="w-full max-w-[480px] bg-[#0c1220]/80 backdrop-blur-3xl border border-white/15 rounded-2xl p-8 md:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-400">
+          <div className="w-full max-w-[480px] bg-[#0c1220]/85 backdrop-blur-3xl border border-white/20 rounded-2xl p-8 md:p-10 shadow-[0_16px_48px_0_rgba(0,0,0,0.7)] animate-in fade-in zoom-in-95 duration-400 relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent">
             
             {/* Back Button */}
             <button 

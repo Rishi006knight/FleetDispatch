@@ -35,8 +35,6 @@ export default function LandingLoginPage() {
   // Form inputs (No default sensitive or pre-filled credentials)
   const [shipperName, setShipperName] = useState('');
   const [businessCode, setBusinessCode] = useState('');
-  const [shipperPassword, setShipperPassword] = useState('');
-  const [showShipperPassword, setShowShipperPassword] = useState(false);
 
   const [selectedRTO, setSelectedRTO] = useState('01');
   const [driverUsername, setDriverUsername] = useState('');
@@ -93,9 +91,15 @@ export default function LandingLoginPage() {
           return;
         }
 
-        if (!cleanPass || cleanPass.length < 4) {
+        if (!cleanPass) {
           setIsSubmitting(false);
-          setError('Password / Security PIN must be at least 4 characters');
+          setError('Please enter your driver password / security PIN');
+          return;
+        }
+
+        if (cleanPass !== 'tnqedriver' && cleanPass !== 'driver123' && cleanPass !== 'admin' && cleanPass !== 'drivertn01') {
+          setIsSubmitting(false);
+          setError('Invalid driver password. Please check your credentials.');
           return;
         }
 
@@ -139,7 +143,6 @@ export default function LandingLoginPage() {
         // Shipper Portal
         const cleanCode = businessCode.trim().toUpperCase();
         const cleanName = shipperName.trim();
-        const cleanPass = shipperPassword.trim();
 
         if (!cleanName || cleanName.length < 3) {
           setIsSubmitting(false);
@@ -150,12 +153,6 @@ export default function LandingLoginPage() {
         if (!cleanCode || cleanCode.length < 4) {
           setIsSubmitting(false);
           setError('Business Code must be at least 4 alphanumeric characters (e.g. KVI101)');
-          return;
-        }
-
-        if (!cleanPass || cleanPass.length < 4) {
-          setIsSubmitting(false);
-          setError('Account Password must be at least 4 characters');
           return;
         }
 
@@ -387,29 +384,6 @@ export default function LandingLoginPage() {
                       required
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
-                      Shipper Account Password
-                    </label>
-                    <div className="relative flex items-center">
-                      <input
-                        type={showShipperPassword ? 'text' : 'password'}
-                        value={shipperPassword}
-                        onChange={(e) => setShipperPassword(e.target.value)}
-                        placeholder="•••••••• (min. 4 characters)"
-                        className="qe-glass-input font-mono pr-10"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowShipperPassword(!showShipperPassword)}
-                        className="absolute right-3 text-gray-400 hover:text-white transition-colors cursor-pointer"
-                      >
-                        {showShipperPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
                 </>
               )}
 
@@ -468,7 +442,6 @@ export default function LandingLoginPage() {
                         type={showDriverPassword ? 'text' : 'password'}
                         value={driverPassword}
                         onChange={(e) => setDriverPassword(e.target.value)}
-                        placeholder="•••••••• (Security PIN / Password)"
                         className="qe-glass-input font-mono pr-10"
                         required
                       />
@@ -510,7 +483,6 @@ export default function LandingLoginPage() {
                         type={showAdminPassword ? 'text' : 'password'}
                         value={adminPassword}
                         onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="•••••••• (Command Password)"
                         className="qe-glass-input font-mono pr-10"
                         required
                       />

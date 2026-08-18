@@ -38,6 +38,7 @@ export default function LandingLoginPage() {
   const [shipperPassword, setShipperPassword] = useState('');
   const [showShipperPassword, setShowShipperPassword] = useState(false);
 
+  const [selectedRTO, setSelectedRTO] = useState('01');
   const [driverUsername, setDriverUsername] = useState('');
   const [driverPassword, setDriverPassword] = useState('');
   const [showDriverPassword, setShowDriverPassword] = useState(false);
@@ -48,6 +49,17 @@ export default function LandingLoginPage() {
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSelectRTO = (rto: string) => {
+    setSelectedRTO(rto);
+    setError('');
+    if (driverUsername && driverUsername.includes('-')) {
+      const parts = driverUsername.split('-');
+      if (parts.length === 3) {
+        setDriverUsername(`TN-${rto}-${parts[2]}`);
+      }
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +89,7 @@ export default function LandingLoginPage() {
 
         if (!cleanUpperUser) {
           setIsSubmitting(false);
-          setError('Please enter your Driver Username / Vehicle Badge');
+          setError('Please enter your Driver Username / Vehicle Badge (e.g. TN-01-1001)');
           return;
         }
 
@@ -89,7 +101,7 @@ export default function LandingLoginPage() {
 
         const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})-(\d{4})$/i);
         
-        let rtoCode = '01';
+        let rtoCode = selectedRTO || '01';
         let driverUnit = '1001';
 
         if (rtoMatch) {
@@ -131,13 +143,13 @@ export default function LandingLoginPage() {
 
         if (!cleanName || cleanName.length < 3) {
           setIsSubmitting(false);
-          setError('Please enter a valid Company / Shipper Business Name');
+          setError('Please enter your Company / Shipper Business Name');
           return;
         }
 
         if (!cleanCode || cleanCode.length < 4) {
           setIsSubmitting(false);
-          setError('Business Code must be at least 4 alphanumeric characters (e.g. ABC123)');
+          setError('Business Code must be at least 4 alphanumeric characters (e.g. KVI101)');
           return;
         }
 
@@ -356,7 +368,7 @@ export default function LandingLoginPage() {
                       type="text"
                       value={shipperName}
                       onChange={(e) => setShipperName(e.target.value)}
-                      placeholder="e.g. ABC Logistics & Freight"
+                      placeholder="e.g. Kovai Industrial Components Ltd"
                       className="qe-glass-input"
                       required
                     />
@@ -370,7 +382,7 @@ export default function LandingLoginPage() {
                       type="text"
                       value={businessCode}
                       onChange={(e) => setBusinessCode(e.target.value.toUpperCase())}
-                      placeholder="e.g. ABC123"
+                      placeholder="e.g. KVI101"
                       className="qe-glass-input font-mono uppercase"
                       required
                     />
@@ -385,7 +397,7 @@ export default function LandingLoginPage() {
                         type={showShipperPassword ? 'text' : 'password'}
                         value={shipperPassword}
                         onChange={(e) => setShipperPassword(e.target.value)}
-                        placeholder="Enter account password"
+                        placeholder="•••••••• (min. 4 characters)"
                         className="qe-glass-input font-mono pr-10"
                         required
                       />
@@ -404,16 +416,43 @@ export default function LandingLoginPage() {
               {/* DRIVER FORM FIELDS */}
               {selectedPortal === 'driver' && (
                 <>
+                  {/* District RTO 16 Hubs Grid */}
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-2">
+                      Operational District RTO (16 Hubs)
+                    </label>
+                    <div className="grid grid-cols-4 gap-1.5 max-h-36 overflow-y-auto pr-1">
+                      {RTO_DISTRICTS.map((dist) => {
+                        const isSelected = selectedRTO === dist.rto;
+                        return (
+                          <button
+                            key={dist.rto}
+                            type="button"
+                            onClick={() => handleSelectRTO(dist.rto)}
+                            className={`p-1.5 rounded-lg text-center transition-all border cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#e67e22] border-[#e67e22] text-white shadow-md shadow-amber-500/25'
+                                : 'bg-white/[0.04] border-white/10 text-gray-300 hover:bg-white/[0.08]'
+                            }`}
+                          >
+                            <div className="text-[11px] font-mono font-bold">TN-{dist.rto}</div>
+                            <div className="text-[9px] truncate opacity-80">{dist.name}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
-                      Username / Badge ID
+                      Driver Username / Badge ID
                     </label>
                     <div className="relative">
                       <input
                         type="text"
                         value={driverUsername}
                         onChange={(e) => setDriverUsername(e.target.value.toUpperCase())}
-                        placeholder="e.g. TN-01-1001"
+                        placeholder={`e.g. TN-${selectedRTO || '01'}-1001`}
                         className="qe-glass-input font-mono uppercase"
                         required
                       />
@@ -429,7 +468,7 @@ export default function LandingLoginPage() {
                         type={showDriverPassword ? 'text' : 'password'}
                         value={driverPassword}
                         onChange={(e) => setDriverPassword(e.target.value)}
-                        placeholder="Enter driver password"
+                        placeholder="•••••••• (Security PIN / Password)"
                         className="qe-glass-input font-mono pr-10"
                         required
                       />
@@ -456,7 +495,7 @@ export default function LandingLoginPage() {
                       type="text"
                       value={adminUsername}
                       onChange={(e) => setAdminUsername(e.target.value)}
-                      placeholder="Enter administrator username"
+                      placeholder="e.g. admin"
                       className="qe-glass-input font-mono"
                       required
                     />
@@ -471,7 +510,7 @@ export default function LandingLoginPage() {
                         type={showAdminPassword ? 'text' : 'password'}
                         value={adminPassword}
                         onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Enter command password"
+                        placeholder="•••••••• (Command Password)"
                         className="qe-glass-input font-mono pr-10"
                         required
                       />

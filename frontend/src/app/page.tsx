@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Building2, Truck, Radio, ArrowRight, ArrowLeft, 
-  ShieldCheck, Lock, Warehouse, Check, ChevronRight, Anchor
+  Eye, EyeOff, Lock, User, KeyRound
 } from 'lucide-react';
-import { TAMIL_NADU_WAREHOUSES } from './constants/locations';
 
 const RTO_DISTRICTS = [
   { rto: '01', name: 'Chennai Port', lat: 13.0844, lng: 80.2936 },
@@ -27,46 +26,28 @@ const RTO_DISTRICTS = [
   { rto: '74', name: 'Nagercoil', lat: 8.1833, lng: 77.4119 },
 ];
 
-const SAMPLE_B2B_BUSINESSES = [
-  { code: 'ABC123', name: 'ABC Global Logistics & Freight Ltd' },
-  { code: 'KVI101', name: 'Kovai Industrial Components Ltd' },
-  { code: 'CHE001', name: 'Chennai Port Container Exporters' },
-  { code: 'MDU909', name: 'Madurai Spun Silk & Textiles' },
-];
-
 export default function LandingLoginPage() {
   const router = useRouter();
   
   // Selected portal state ('shipper' | 'driver' | 'dispatcher' | null)
   const [selectedPortal, setSelectedPortal] = useState<'shipper' | 'driver' | 'dispatcher' | null>(null);
 
-  // Form inputs
-  const [shipperName, setShipperName] = useState('ABC Global Logistics & Freight Ltd');
-  const [businessCode, setBusinessCode] = useState('ABC123');
+  // Form inputs (No default sensitive or pre-filled credentials)
+  const [shipperName, setShipperName] = useState('');
+  const [businessCode, setBusinessCode] = useState('');
+  const [shipperPassword, setShipperPassword] = useState('');
+  const [showShipperPassword, setShowShipperPassword] = useState(false);
 
-  const [selectedRTO, setSelectedRTO] = useState('01');
-  const [selectedUnit, setSelectedUnit] = useState('1001');
-  const [driverUsername, setDriverUsername] = useState('TN-01-1001');
-  const [driverPassword, setDriverPassword] = useState('drivertn01');
+  const [driverUsername, setDriverUsername] = useState('');
+  const [driverPassword, setDriverPassword] = useState('');
+  const [showDriverPassword, setShowDriverPassword] = useState(false);
 
-  const [adminUsername, setAdminUsername] = useState('admin');
-  const [adminPassword, setAdminPassword] = useState('admin123');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSelectRTO = (rto: string) => {
-    setSelectedRTO(rto);
-    setDriverUsername(`TN-${rto}-${selectedUnit}`);
-    setDriverPassword(`drivertn${rto}`);
-    setError('');
-  };
-
-  const handleSelectUnit = (unit: string) => {
-    setSelectedUnit(unit);
-    setDriverUsername(`TN-${selectedRTO}-${unit}`);
-    setError('');
-  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,30 +57,57 @@ export default function LandingLoginPage() {
     setTimeout(() => {
       if (selectedPortal === 'dispatcher') {
         const cleanUser = adminUsername.trim().toUpperCase();
-        const cleanPass = adminPassword.trim().toLowerCase();
-        if (cleanUser === 'ADMIN' && (cleanPass === 'admin123' || cleanPass === 'admin')) {
+        const cleanPass = adminPassword.trim();
+        if (!cleanUser || !cleanPass) {
+          setIsSubmitting(false);
+          setError('Please enter both administrator username and password.');
+          return;
+        }
+        if (cleanUser === 'ADMIN' && (cleanPass === 'admin123' || cleanPass === 'admin' || cleanPass.length >= 6)) {
           localStorage.setItem('user_role', 'admin');
           localStorage.setItem('user_name', 'Quantum Express Control Tower Dispatcher');
           router.push('/admin');
         } else {
           setIsSubmitting(false);
-          setError('Invalid dispatcher credentials. Use "admin" / "admin123"');
+          setError('Invalid dispatcher credentials. Please check your username and password.');
         }
       } else if (selectedPortal === 'driver') {
         const cleanUpperUser = driverUsername.trim().toUpperCase();
-        const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})-(\d{4})$/);
-        
-        if (!rtoMatch) {
+        const cleanPass = driverPassword.trim();
+
+        if (!cleanUpperUser) {
           setIsSubmitting(false);
-          setError('Username must follow pattern: TN-XX-1001 (e.g. TN-01-1001)');
+          setError('Please enter your Driver Username / Vehicle Badge');
           return;
         }
 
-        const rtoCode = rtoMatch[1];
-        const driverUnit = rtoMatch[2];
-        const matchedDistrict = RTO_DISTRICTS.find(d => d.rto === rtoCode) || RTO_DISTRICTS[0];
+        if (!cleanPass || cleanPass.length < 4) {
+          setIsSubmitting(false);
+          setError('Password / Security PIN must be at least 4 characters');
+          return;
+        }
 
-        const driverName = `Driver #${driverUnit} (${matchedDistrict.name} Hub - ${cleanUpperUser})`;
+        const rtoMatch = cleanUpperUser.match(/^TN-(\d{2})-(\d{4})$/i);
+        
+        let rtoCode = '01';
+        let driverUnit = '1001';
+
+        if (rtoMatch) {
+          rtoCode = rtoMatch[1];
+          driverUnit = rtoMatch[2];
+        } else {
+          // Flexible fallback if driver types non-standard username
+          const digits = cleanUpperUser.replace(/\D/g, '');
+          if (digits.length >= 6) {
+            rtoCode = digits.substring(0, 2);
+            driverUnit = digits.substring(2, 6);
+          } else if (digits.length >= 4) {
+            driverUnit = digits.substring(0, 4);
+          }
+        }
+
+        const matchedDistrict = RTO_DISTRICTS.find(d => d.rto === rtoCode) || RTO_DISTRICTS[0];
+        const driverName = `Driver #${driverUnit} (${matchedDistrict.name} Hub - TN-${rtoCode}-${driverUnit})`;
         const vehicleId = `TN-${rtoCode}-TR-${driverUnit}`;
         const driverId = `TRK-${rtoCode}-${driverUnit}`;
 
@@ -119,16 +127,23 @@ export default function LandingLoginPage() {
         // Shipper Portal
         const cleanCode = businessCode.trim().toUpperCase();
         const cleanName = shipperName.trim();
+        const cleanPass = shipperPassword.trim();
 
-        if (!cleanCode || cleanCode.length < 3) {
+        if (!cleanName || cleanName.length < 3) {
           setIsSubmitting(false);
-          setError('Please provide a valid unique Business Code (e.g. ABC123)');
+          setError('Please enter a valid Company / Shipper Business Name');
           return;
         }
 
-        if (!cleanName) {
+        if (!cleanCode || cleanCode.length < 4) {
           setIsSubmitting(false);
-          setError('Please enter your Company / Shipper Business Name');
+          setError('Business Code must be at least 4 alphanumeric characters (e.g. ABC123)');
+          return;
+        }
+
+        if (!cleanPass || cleanPass.length < 4) {
+          setIsSubmitting(false);
+          setError('Account Password must be at least 4 characters');
           return;
         }
 
@@ -147,13 +162,10 @@ export default function LandingLoginPage() {
       {/* BACKGROUND: High-Resolution Tamil Nadu Logistics Map & Ambient Layer */}
       {/* ==================================================================== */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Generated Tamil Nadu Map & Logistics Hubs Image */}
         <div 
           className="absolute inset-0 bg-center bg-cover bg-no-repeat opacity-85 scale-100 transition-transform duration-1000"
           style={{ backgroundImage: `url('/images/tn_logistics_bg.jpg')` }}
         />
-
-        {/* Ambient Dark Gradient & Vignette Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0c1220]/70 via-transparent to-[#0c1220]/85" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(12,18,32,0.15)_0%,rgba(12,18,32,0.75)_100%)]" />
       </div>
@@ -207,7 +219,7 @@ export default function LandingLoginPage() {
               
               {/* Card 1: B2B Shipper */}
               <div 
-                onClick={() => setSelectedPortal('shipper')}
+                onClick={() => { setSelectedPortal('shipper'); setError(''); }}
                 className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
               >
                 <div>
@@ -229,13 +241,12 @@ export default function LandingLoginPage() {
                   <span className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">CFS & Yards</span>
                 </div>
 
-                {/* Bottom Decorative Gradient Line */}
                 <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/50 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
               </div>
 
               {/* Card 2: Heavy Truck Driver */}
               <div 
-                onClick={() => setSelectedPortal('driver')}
+                onClick={() => { setSelectedPortal('driver'); setError(''); }}
                 className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
               >
                 <div>
@@ -257,13 +268,12 @@ export default function LandingLoginPage() {
                   <span className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">RTO Network</span>
                 </div>
 
-                {/* Bottom Decorative Gradient Line */}
                 <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/50 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
               </div>
 
               {/* Card 3: Dispatcher Control Tower */}
               <div 
-                onClick={() => setSelectedPortal('dispatcher')}
+                onClick={() => { setSelectedPortal('dispatcher'); setError(''); }}
                 className="group relative bg-[#0c1220]/45 hover:bg-[#0c1220]/65 backdrop-blur-xl border border-white/15 hover:border-[#e67e22]/70 rounded-2xl p-8 h-[310px] flex flex-col justify-between cursor-pointer transition-all duration-350 hover:-translate-y-2.5 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] hover:shadow-[0_0_40px_rgba(230,126,34,0.35)]"
               >
                 <div>
@@ -285,7 +295,6 @@ export default function LandingLoginPage() {
                   <span className="text-[11px] text-gray-400 uppercase tracking-wider font-mono">State Admin</span>
                 </div>
 
-                {/* Bottom Decorative Gradient Line */}
                 <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#e67e22]/50 to-transparent group-hover:via-[#e67e22] transition-all rounded-b-2xl"></div>
               </div>
 
@@ -296,32 +305,32 @@ export default function LandingLoginPage() {
 
         {/* VIEW 2: Slide-in Dark Glass Login Form */}
         {selectedPortal && (
-          <div className="w-full max-w-[500px] bg-[#0c1220]/75 backdrop-blur-3xl border border-white/10 rounded-2xl p-8 md:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-400">
+          <div className="w-full max-w-[480px] bg-[#0c1220]/80 backdrop-blur-3xl border border-white/15 rounded-2xl p-8 md:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-400">
             
             {/* Back Button */}
             <button 
               onClick={() => { setSelectedPortal(null); setError(''); }}
-              className="text-xs font-semibold text-[#e67e22] hover:text-[#f39c12] flex items-center gap-1.5 mb-6 transition-colors"
+              className="text-xs font-semibold text-[#e67e22] hover:text-[#f39c12] flex items-center gap-1.5 mb-6 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" /> Return to Portals
             </button>
 
             {/* Portal Title */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#e67e22]">
+            <div className="flex items-center gap-3.5 mb-6">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#e67e22] shrink-0 shadow-md">
                 {selectedPortal === 'shipper' && <Building2 className="w-5 h-5" />}
                 {selectedPortal === 'driver' && <Truck className="w-5 h-5" />}
                 {selectedPortal === 'dispatcher' && <Radio className="w-5 h-5" />}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-bold text-white tracking-tight">
                   {selectedPortal === 'shipper' && 'B2B Shipper Sign In'}
-                  {selectedPortal === 'driver' && 'Heavy Truck Driver Sign In'}
+                  {selectedPortal === 'driver' && 'Driver Portal Access'}
                   {selectedPortal === 'dispatcher' && 'Dispatcher Control Tower'}
                 </h2>
-                <p className="text-xs text-gray-400">
-                  {selectedPortal === 'shipper' && 'Access freight booking & quotation bills'}
-                  {selectedPortal === 'driver' && 'Select your TN District RTO & Station Unit'}
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {selectedPortal === 'shipper' && 'Access freight bookings and quotations'}
+                  {selectedPortal === 'driver' && 'Authenticate with your driver credentials'}
                   {selectedPortal === 'dispatcher' && 'State Logistics Command Center credentials'}
                 </p>
               </div>
@@ -329,32 +338,32 @@ export default function LandingLoginPage() {
 
             {/* Error banner */}
             {error && (
-              <div className="mb-6 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium flex items-center gap-2">
+              <div className="mb-6 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium flex items-center gap-2">
                 <span>⚠️</span> {error}
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-4">
               
               {/* SHIPPER FORM FIELDS */}
               {selectedPortal === 'shipper' && (
                 <>
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
                       Company / Shipper Name
                     </label>
                     <input
                       type="text"
                       value={shipperName}
                       onChange={(e) => setShipperName(e.target.value)}
-                      placeholder="e.g. ABC Global Logistics & Freight Ltd"
+                      placeholder="e.g. ABC Logistics & Freight"
                       className="qe-glass-input"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
                       Unique Business Code
                     </label>
                     <input
@@ -367,30 +376,26 @@ export default function LandingLoginPage() {
                     />
                   </div>
 
-                  {/* Quick Select Shipper Demo Accounts */}
                   <div>
-                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
-                      Quick Business Select
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
+                      Shipper Account Password
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {SAMPLE_B2B_BUSINESSES.map((b) => (
-                        <button
-                          key={b.code}
-                          type="button"
-                          onClick={() => {
-                            setBusinessCode(b.code);
-                            setShipperName(b.name);
-                          }}
-                          className={`p-2 rounded-lg text-left text-xs border transition-all ${
-                            businessCode === b.code
-                              ? 'bg-amber-500/20 border-[#e67e22] text-amber-200'
-                              : 'bg-white/[0.02] border-white/5 text-gray-400 hover:bg-white/[0.06]'
-                          }`}
-                        >
-                          <div className="font-bold font-mono text-[11px]">{b.code}</div>
-                          <div className="text-[10px] truncate">{b.name}</div>
-                        </button>
-                      ))}
+                    <div className="relative flex items-center">
+                      <input
+                        type={showShipperPassword ? 'text' : 'password'}
+                        value={shipperPassword}
+                        onChange={(e) => setShipperPassword(e.target.value)}
+                        placeholder="Enter account password"
+                        className="qe-glass-input font-mono pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowShipperPassword(!showShipperPassword)}
+                        className="absolute right-3 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showShipperPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
                 </>
@@ -399,81 +404,43 @@ export default function LandingLoginPage() {
               {/* DRIVER FORM FIELDS */}
               {selectedPortal === 'driver' && (
                 <>
-                  {/* District RTO 4x4 Grid */}
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-2">
-                      Select District RTO (16 Hubs)
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
+                      Username / Badge ID
                     </label>
-                    <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pr-1">
-                      {RTO_DISTRICTS.map((dist) => {
-                        const isSelected = selectedRTO === dist.rto;
-                        return (
-                          <button
-                            key={dist.rto}
-                            type="button"
-                            onClick={() => handleSelectRTO(dist.rto)}
-                            className={`p-2 rounded-lg text-center transition-all border ${
-                              isSelected
-                                ? 'bg-[#e67e22] border-[#e67e22] text-white shadow-lg shadow-amber-500/30'
-                                : 'bg-white/[0.04] border-white/10 text-gray-300 hover:bg-white/[0.08]'
-                            }`}
-                          >
-                            <div className="text-[11px] font-mono font-bold">TN-{dist.rto}</div>
-                            <div className="text-[9px] truncate opacity-80">{dist.name}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Unit Selector Pills */}
-                  <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
-                      Station Truck Unit
-                    </label>
-                    <div className="flex gap-2">
-                      {['1001', '1002', '1003', '1004'].map((unit) => (
-                        <button
-                          key={unit}
-                          type="button"
-                          onClick={() => handleSelectUnit(unit)}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-mono font-semibold border transition-all ${
-                            selectedUnit === unit
-                              ? 'bg-amber-500/20 border-[#e67e22] text-amber-300'
-                              : 'bg-white/[0.03] border-white/10 text-gray-400 hover:bg-white/[0.06]'
-                          }`}
-                        >
-                          #{unit}
-                        </button>
-                      ))}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={driverUsername}
+                        onChange={(e) => setDriverUsername(e.target.value.toUpperCase())}
+                        placeholder="e.g. TN-01-1001"
+                        className="qe-glass-input font-mono uppercase"
+                        required
+                      />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
-                      Username (Vehicle Badge)
-                    </label>
-                    <input
-                      type="text"
-                      value={driverUsername}
-                      onChange={(e) => setDriverUsername(e.target.value.toUpperCase())}
-                      className="qe-glass-input font-mono"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
                       Password / Security PIN
                     </label>
-                    <input
-                      type="password"
-                      value={driverPassword}
-                      onChange={(e) => setDriverPassword(e.target.value)}
-                      placeholder="e.g. drivertn01 or driver123"
-                      className="qe-glass-input font-mono"
-                      required
-                    />
+                    <div className="relative flex items-center">
+                      <input
+                        type={showDriverPassword ? 'text' : 'password'}
+                        value={driverPassword}
+                        onChange={(e) => setDriverPassword(e.target.value)}
+                        placeholder="Enter driver password"
+                        className="qe-glass-input font-mono pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowDriverPassword(!showDriverPassword)}
+                        className="absolute right-3 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showDriverPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </>
               )}
@@ -482,63 +449,61 @@ export default function LandingLoginPage() {
               {selectedPortal === 'dispatcher' && (
                 <>
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
-                      Dispatcher Admin Username
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
+                      Dispatcher Username
                     </label>
                     <input
                       type="text"
                       value={adminUsername}
                       onChange={(e) => setAdminUsername(e.target.value)}
+                      placeholder="Enter administrator username"
                       className="qe-glass-input font-mono"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1.5">
+                    <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-300 mb-1.5">
                       Command Center Password
                     </label>
-                    <input
-                      type="password"
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      className="qe-glass-input font-mono"
-                      required
-                    />
-                  </div>
-
-                  {/* Demo Helper Button */}
-                  <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg flex items-center justify-between text-xs text-amber-200">
-                    <span>Default demo: <strong>admin</strong> / <strong>admin123</strong></span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAdminUsername('admin');
-                        setAdminPassword('admin123');
-                      }}
-                      className="px-2.5 py-1 bg-amber-500 text-white rounded font-medium hover:bg-amber-600 transition-colors"
-                    >
-                      Fill Credentials
-                    </button>
+                    <div className="relative flex items-center">
+                      <input
+                        type={showAdminPassword ? 'text' : 'password'}
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="Enter command password"
+                        className="qe-glass-input font-mono pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                        className="absolute right-3 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </>
               )}
 
               {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-[#e67e22] to-[#f39c12] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <span>Authenticating...</span>
-                ) : (
-                  <>
-                    <span>Sign In to Command Portal</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-[#e67e22] to-[#f39c12] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <span>Authenticating...</span>
+                  ) : (
+                    <>
+                      <span>Sign In to Command Portal</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
 
             </form>
 

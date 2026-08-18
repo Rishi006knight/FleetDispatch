@@ -24,12 +24,12 @@ export default function DriverPortal() {
 
   // Driver identity states
   const [driver, setDriver] = useState<any | null>(null);
-  const [driverId, setDriverId] = useState('TRK-01-1001');
-  const [driverUnit, setDriverUnit] = useState('1001');
-  const [rtoCode, setRtoCode] = useState('01');
-  const [vehicleId, setVehicleId] = useState('TN-01-TR-1001');
-  const [driverName, setDriverName] = useState('Driver #1001');
-  const [stationHub, setStationHub] = useState('Rajaji Salai, Chennai Port CFS');
+  const [driverId, setDriverId] = useState('');
+  const [driverUnit, setDriverUnit] = useState('');
+  const [rtoCode, setRtoCode] = useState('');
+  const [vehicleId, setVehicleId] = useState('');
+  const [driverName, setDriverName] = useState('');
+  const [stationHub, setStationHub] = useState('');
   const [isOnline, setIsOnline] = useState(true);
 
   // Operational states
@@ -56,12 +56,12 @@ export default function DriverPortal() {
 
   useEffect(() => {
     const role = localStorage.getItem('user_role');
-    const storedDriverId = localStorage.getItem('driver_id') || 'TRK-01-1001';
-    const storedUnit = localStorage.getItem('driver_unit') || '1001';
-    const storedRto = localStorage.getItem('rto_code') || '01';
-    const storedVeh = localStorage.getItem('vehicle_id') || 'TN-01-TR-1001';
-    const storedName = localStorage.getItem('user_name') || 'Driver #1001';
-    const storedHub = localStorage.getItem('driver_hub') || 'Rajaji Salai, Chennai Port CFS';
+    const storedDriverId = localStorage.getItem('driver_id') || '';
+    const storedUnit = localStorage.getItem('driver_unit') || '';
+    const storedRto = localStorage.getItem('rto_code') || '';
+    const storedVeh = localStorage.getItem('vehicle_id') || '';
+    const storedName = localStorage.getItem('user_name') || 'Heavy Truck Driver';
+    const storedHub = localStorage.getItem('driver_hub') || 'Logistics Center';
 
     if (role !== 'driver') {
       router.push('/');

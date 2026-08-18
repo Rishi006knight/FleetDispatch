@@ -36,8 +36,8 @@ export default function CustomerPortal() {
   const [activeNav, setActiveNav] = useState<'book' | 'quotes' | 'active' | 'billing'>('book');
 
   // Business profile
-  const [customerName, setCustomerName] = useState('ABC Global Logistics & Freight Ltd');
-  const [businessCode, setBusinessCode] = useState('ABC123');
+  const [customerName, setCustomerName] = useState('');
+  const [businessCode, setBusinessCode] = useState('');
 
   // Booking form mode
   const [bookingMode, setBookingMode] = useState<'preset' | 'inter_warehouse'>('preset');
@@ -67,8 +67,8 @@ export default function CustomerPortal() {
 
   useEffect(() => {
     const role = localStorage.getItem('user_role');
-    const name = localStorage.getItem('user_name') || 'ABC Global Logistics & Freight Ltd';
-    const bCode = localStorage.getItem('business_code') || 'ABC123';
+    const name = localStorage.getItem('user_name') || 'Shipper Enterprise';
+    const bCode = localStorage.getItem('business_code') || 'B2B001';
     
     if (role !== 'customer') {
       router.push('/');

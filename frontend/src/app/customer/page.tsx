@@ -272,9 +272,9 @@ export default function CustomerPortal() {
   };
 
   // Filtered orders for tab views
-  const quoteOrders = orders.filter(o => ['quote_requested', 'bill_presented', 'bill_rejected'].includes(o.status));
-  const activeOrders = orders.filter(o => ['ready_for_dispatch', 'dispatch_requested', 'driver_assigned', 'in_transit', 'pickup_arrived'].includes(o.status));
-  const completedOrders = orders.filter(o => o.status === 'completed');
+  const quoteOrders = orders.filter(o => ['quote_requested', 'pending_quote', 'bill_presented', 'quoted', 'bill_rejected'].includes(o.status));
+  const activeOrders = orders.filter(o => ['ready_for_dispatch', 'confirmed', 'dispatch_requested', 'driver_assigned', 'assigned', 'in_transit', 'pickup_arrived', 'out_for_delivery'].includes(o.status));
+  const completedOrders = orders.filter(o => ['completed', 'delivered'].includes(o.status));
 
   return (
     <div className="flex min-h-screen bg-[#f8f9fb] text-[#1a1d23] font-sans antialiased">
@@ -694,7 +694,8 @@ export default function CustomerPortal() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {quoteOrders.map((order) => {
-                    const isPresented = order.status === 'bill_presented';
+                    const isPresented = order.status === 'bill_presented' || order.status === 'quoted' || order.quotationStatus === 'quoted';
+                    const displayTotal = order.totalBillAmount || order.price || order.billingDetails?.totalAmount || order.itemizedBill?.totalAmount;
                     return (
                       <div key={order.orderId} className="qe-card qe-card-hover p-5 flex flex-col justify-between">
                         <div>
@@ -714,16 +715,16 @@ export default function CustomerPortal() {
                               {order.pickup?.address?.split(',')[0]} ➔ {order.drop?.address?.split(',')[0]}
                             </div>
                             <div className="text-[#5a6070]">
-                              Cargo: <strong>{order.packageDetails?.type}</strong> • {(order.packageDetails?.weight / 1000).toFixed(1)} MT
+                              Cargo: <strong>{order.packageDetails?.type || order.package?.type || 'Heavy Machinery & Cargo'}</strong> • {((order.packageDetails?.weight || order.package?.weight || 12500) / 1000).toFixed(1)} MT
                             </div>
                           </div>
 
                           {/* Price preview if available */}
-                          {order.totalBillAmount && (
+                          {displayTotal > 0 && (
                             <div className="mt-4 p-3 bg-[#f8f9fb] rounded-lg border border-black/[0.04] flex items-center justify-between">
                               <span className="text-xs text-[#5a6070]">Itemized Total</span>
                               <span className="text-base font-bold text-[#e67e22]">
-                                ₹{order.totalBillAmount?.toLocaleString()}
+                                ₹{Math.round(displayTotal).toLocaleString()}
                               </span>
                             </div>
                           )}
@@ -731,7 +732,7 @@ export default function CustomerPortal() {
 
                         <div className="mt-5 pt-3 border-t border-black/[0.06] flex items-center justify-between">
                           <span className="text-[11px] text-[#9ca3af]">
-                            {new Date(order.createdAt).toLocaleDateString()}
+                            {new Date(order.createdAt || Date.now()).toLocaleDateString()}
                           </span>
 
                           {isPresented ? (

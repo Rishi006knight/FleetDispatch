@@ -340,4 +340,60 @@ public class DriverController {
         res.put("driver", driver);
         return ResponseEntity.ok(res);
     }
+
+    @PostMapping("/dispatch-response")
+    public ResponseEntity<?> driverDispatchResponse(@RequestBody Map<String, String> body) {
+        String orderId = body.get("orderId");
+        String driverId = body.get("driverId");
+        String decision = body.get("decision"); // "accept" or "decline"
+
+        Optional<Order> orderOpt = orderRepository.findByOrderId(orderId);
+        Optional<Driver> driverOpt = driverRepository.findByDriverId(driverId);
+
+        if (orderOpt.isEmpty() || driverOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Order or Driver not found."));
+        }
+
+        Order order = orderOpt.get();
+        Driver driver = driverOpt.get();
+
+        if ("accept".equalsIgnoreCase(decision)) {
+            driver.setStatus("busy");
+            driverRepository.save(driver);
+
+            Map<String, Object> routeResult = mlServiceClient.optimizeRoute(driver.getCurrentLocation(), order.getPickup(), order.getDrop());
+            List<Location> route = (List<Location>) routeResult.get("route");
+            Double eta = (Double) routeResult.get("total_eta_minutes");
+
+            order.setDriverId(driverId);
+            order.setStatus("driver_assigned");
+            order.setDispatchStatus("accepted");
+            order.setRouteCoordinates(route != null ? route : Arrays.asList(order.getPickup(), order.getDrop()));
+            order.setEta(eta != null ? eta : order.getEta());
+
+            Order saved = orderRepository.save(order);
+
+            Map<String, Object> assignmentPayload = new HashMap<>();
+            assignmentPayload.put("order", saved);
+            assignmentPayload.put("driver", driver);
+
+            socketIOService.emit("ORDER_ASSIGNED", assignmentPayload);
+            socketIOService.emit("DRIVER_UPDATED", driver);
+            socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Consignment load accepted! Navigation ready.", "order", saved));
+        } else {
+            order.setStatus("ready_for_dispatch");
+            order.setDispatchStatus("declined");
+            order.setDispatchRequestedDriverId(null);
+            order.setDispatchRequestedDriverName(null);
+
+            Order saved = orderRepository.save(order);
+
+            socketIOService.emit("DISPATCH_REQUEST_DECLINED", Map.of("order", saved, "driver", driver));
+            socketIOService.emit("ORDER_STATUS_UPDATED", saved);
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Consignment load declined.", "order", saved));
+        }
+    }
 }

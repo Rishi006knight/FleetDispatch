@@ -280,4 +280,62 @@ public class Order {
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    @JsonProperty("packageDetails")
+    public PackageInfo getPackageDetails() {
+        return packageInfo;
+    }
+
+    @JsonProperty("packageDetails")
+    public void setPackageDetails(PackageInfo packageDetails) {
+        this.packageInfo = packageDetails;
+    }
+
+    @JsonProperty("itemizedBill")
+    public BillingDetails getItemizedBill() {
+        return billingDetails;
+    }
+
+    @JsonProperty("itemizedBill")
+    public void setItemizedBill(BillingDetails itemizedBill) {
+        this.billingDetails = itemizedBill;
+    }
+
+    @JsonProperty("totalBillAmount")
+    public double getTotalBillAmount() {
+        return price;
+    }
+
+    @JsonProperty("totalBillAmount")
+    public void setTotalBillAmount(double totalBillAmount) {
+        this.price = totalBillAmount;
+    }
+
+    @JsonProperty("warehouseServices")
+    public java.util.Map<String, Object> getWarehouseServices() {
+        java.util.Map<String, Object> ws = new java.util.HashMap<>();
+        ws.put("facilityId", warehouseId != null ? warehouseId : "chennai-port");
+        ws.put("storageType", storageType != null ? storageType : "None");
+        ws.put("days", storageDays);
+        ws.put("handlingRequired", requiresHandling);
+        return ws;
+    }
+
+    @JsonProperty("warehouseServices")
+    public void setWarehouseServices(java.util.Map<String, Object> ws) {
+        if (ws != null) {
+            if (ws.get("facilityId") != null) {
+                this.warehouseId = ws.get("facilityId").toString();
+            }
+            if (ws.get("storageType") != null) {
+                this.storageType = ws.get("storageType").toString();
+            }
+            if (ws.get("days") != null) {
+                this.storageDays = Integer.parseInt(ws.get("days").toString());
+            }
+            if (ws.get("handlingRequired") != null) {
+                this.requiresHandling = Boolean.parseBoolean(ws.get("handlingRequired").toString());
+            }
+        }
+    }
 }

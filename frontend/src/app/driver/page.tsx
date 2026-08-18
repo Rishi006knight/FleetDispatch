@@ -108,14 +108,14 @@ export default function DriverPortal() {
     });
 
     socketRef.current.on('ORDER_DISPATCH_REQUEST', ({ order, driver: targetDriver }: any) => {
-      if (targetDriver.driverId === storedDriverId || order.dispatchRequestedDriverId === storedDriverId) {
+      if (targetDriver?.driverId === storedDriverId || order?.dispatchRequestedDriverId === storedDriverId) {
         setPendingDispatchRequest(order);
       }
     });
 
     socketRef.current.on('ORDER_ASSIGNED', ({ order, driver: updatedDriver }: any) => {
-      if (updatedDriver.driverId === storedDriverId) {
-        setDriver(updatedDriver);
+      if (updatedDriver?.driverId === storedDriverId || order?.driverId === storedDriverId) {
+        setDriver(updatedDriver || ((prev: any) => ({ ...prev, status: 'busy' })));
         setActiveOrder(order);
         setPendingDispatchRequest(null);
       }
@@ -553,11 +553,11 @@ export default function DriverPortal() {
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-black/[0.06]">
                   <span className="text-[10px] uppercase font-bold text-[#9ca3af] block">Cargo Commodity</span>
-                  <span className="text-xs font-bold text-[#1a1d23]">{pendingDispatchRequest.packageDetails?.type}</span>
+                  <span className="text-xs font-bold text-[#1a1d23]">{pendingDispatchRequest.packageDetails?.type || pendingDispatchRequest.package?.type || 'Heavy Machinery & Cargo'}</span>
                 </div>
                 <div className="bg-white p-3.5 rounded-xl border border-black/[0.06]">
                   <span className="text-[10px] uppercase font-bold text-[#9ca3af] block">Trip Payout</span>
-                  <span className="text-base font-bold text-[#e67e22]">₹{pendingDispatchRequest.totalBillAmount?.toLocaleString() || '24,500'}</span>
+                  <span className="text-base font-bold text-[#e67e22]">₹{Math.round(pendingDispatchRequest.totalBillAmount || pendingDispatchRequest.price || 24500).toLocaleString()}</span>
                 </div>
               </div>
 
@@ -628,15 +628,15 @@ export default function DriverPortal() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#5a6070]">Cargo:</span>
-                        <span className="font-semibold">{activeOrder.packageDetails?.type}</span>
+                        <span className="font-semibold">{activeOrder.packageDetails?.type || activeOrder.package?.type || 'Heavy Machinery & Cargo'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#5a6070]">Weight:</span>
-                        <span className="font-bold">{(activeOrder.packageDetails?.weight / 1000).toFixed(1)} MT</span>
+                        <span className="font-bold">{(((activeOrder.packageDetails?.weight || activeOrder.package?.weight || 12500)) / 1000).toFixed(1)} MT</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#5a6070]">Trip Earnings:</span>
-                        <span className="font-bold text-[#e67e22]">₹{activeOrder.totalBillAmount?.toLocaleString() || '24,500'}</span>
+                        <span className="font-bold text-[#e67e22]">₹{Math.round(activeOrder.totalBillAmount || activeOrder.price || 24500).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>

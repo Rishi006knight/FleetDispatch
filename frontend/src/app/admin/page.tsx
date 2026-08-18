@@ -288,15 +288,15 @@ export default function AdminDashboard() {
 
   // Filtered orders
   const filteredOrders = orders.filter((o) => {
-    if (activeTab === 'quotes') return ['quote_requested', 'bill_presented', 'bill_rejected'].includes(o.status);
-    if (activeTab === 'ready') return o.status === 'ready_for_dispatch';
-    if (activeTab === 'active') return ['dispatch_requested', 'driver_assigned', 'in_transit', 'pickup_arrived'].includes(o.status);
-    if (activeTab === 'completed') return o.status === 'completed';
+    if (activeTab === 'quotes') return ['quote_requested', 'pending_quote', 'bill_presented', 'quoted', 'bill_rejected'].includes(o.status);
+    if (activeTab === 'ready') return ['ready_for_dispatch', 'confirmed'].includes(o.status);
+    if (activeTab === 'active') return ['dispatch_requested', 'driver_assigned', 'assigned', 'in_transit', 'pickup_arrived', 'out_for_delivery'].includes(o.status);
+    if (activeTab === 'completed') return ['completed', 'delivered'].includes(o.status);
     return true;
   });
 
   const activeTruckCount = drivers.filter(d => d.status === 'busy' || d.status === 'in_transit').length;
-  const readyCount = orders.filter(o => o.status === 'ready_for_dispatch').length;
+  const readyCount = orders.filter(o => ['ready_for_dispatch', 'confirmed'].includes(o.status)).length;
 
   return (
     <div className="min-h-screen bg-[#f8f9fb] text-[#1a1d23] font-sans antialiased flex flex-col">
@@ -534,21 +534,22 @@ export default function AdminDashboard() {
                           </td>
                           <td className="p-2.5">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                              order.status === 'quote_requested' ? 'bg-blue-100 text-blue-800' :
-                              order.status === 'bill_presented' ? 'bg-amber-100 text-amber-800' :
-                              order.status === 'ready_for_dispatch' ? 'bg-emerald-100 text-emerald-800 animate-pulse' :
-                              order.status === 'in_transit' ? 'bg-indigo-100 text-indigo-800' :
+                              (order.status === 'quote_requested' || order.status === 'pending_quote') ? 'bg-blue-100 text-blue-800' :
+                              (order.status === 'bill_presented' || order.status === 'quoted') ? 'bg-amber-100 text-amber-800' :
+                              (order.status === 'ready_for_dispatch' || order.status === 'confirmed') ? 'bg-emerald-100 text-emerald-800 animate-pulse' :
+                              (order.status === 'driver_assigned' || order.status === 'assigned' || order.status === 'in_transit' || order.status === 'dispatch_requested') ? 'bg-indigo-100 text-indigo-800' :
                               'bg-gray-100 text-gray-700'
                             }`}>
-                              {order.status === 'quote_requested' ? 'Quotation Req' :
-                               order.status === 'bill_presented' ? 'Bill Sent' :
-                               order.status === 'ready_for_dispatch' ? 'Ready Dispatch' :
+                              {(order.status === 'quote_requested' || order.status === 'pending_quote') ? 'Quotation Req' :
+                               (order.status === 'bill_presented' || order.status === 'quoted') ? 'Bill Sent' :
+                               (order.status === 'ready_for_dispatch' || order.status === 'confirmed') ? 'Ready Dispatch' :
+                               order.status === 'driver_assigned' ? 'Driver Assigned' :
                                order.status === 'in_transit' ? 'In Transit' :
-                               order.status.replace(/_/g, ' ')}
+                               order.status?.replace(/_/g, ' ') || 'Pending'}
                             </span>
                           </td>
                           <td className="p-2.5 text-right">
-                            {order.status === 'quote_requested' && (
+                            {(order.status === 'quote_requested' || order.status === 'pending_quote') && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleOpenQuotation(order); }}
                                 className="px-2.5 py-1 bg-[#e67e22] text-white text-[10px] font-bold rounded hover:bg-[#d35400] transition-colors"
@@ -556,7 +557,7 @@ export default function AdminDashboard() {
                                 Quote Bill
                               </button>
                             )}
-                            {order.status === 'ready_for_dispatch' && (
+                            {(order.status === 'ready_for_dispatch' || order.status === 'confirmed') && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleOpenDispatch(order); }}
                                 className="px-2.5 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded hover:bg-emerald-700 transition-colors"
